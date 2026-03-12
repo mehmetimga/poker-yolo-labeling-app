@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "./client";
-import type { SchemaScoreResponse, Taxonomy } from "@/types";
+import type { Annotation, SchemaScoreResponse, Taxonomy } from "@/types";
 
 export function useTaxonomy() {
   return useQuery<Taxonomy>({
@@ -47,6 +47,15 @@ export function useAssignSchema(imageId: number) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["image", imageId] });
       queryClient.invalidateQueries({ queryKey: ["images"] });
+    },
+  });
+}
+
+export function useSchemaTemplate() {
+  return useMutation({
+    mutationFn: async (schemaName: string): Promise<Annotation[]> => {
+      const { data } = await api.get(`/schemas/templates/${schemaName}`);
+      return data;
     },
   });
 }
