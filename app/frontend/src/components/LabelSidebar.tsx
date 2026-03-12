@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useAnnotationStore } from "@/stores/annotationStore";
-import { useTaxonomy, useScoreSchemas, useAssignSchema, useSchemaDefinitions, useSchemaTemplate } from "@/api/schemas";
+import { useTaxonomy, useScoreSchemas, useAssignSchema, useSchemaDefinitions, useSchemaTemplate, useTemplatesStatus } from "@/api/schemas";
 import { useSaveAnnotations, useAutosaveAnnotations } from "@/api/annotations";
 import { useExportYolo, useExportMetadata } from "@/api/export";
 import { useImages, useImage, useUpdateImageStatus, useRunInference } from "@/api/images";
@@ -38,8 +38,11 @@ export default function LabelSidebar({ imageId, projectId }: Props) {
   const { data: currentImage } = useImage(imageId);
   const [copyStatus, setCopyStatus] = useState<string | null>(null);
   const [showTemplateDropdown, setShowTemplateDropdown] = useState(false);
+  const [showSaveTemplate, setShowSaveTemplate] = useState(false);
+  const [newTemplateName, setNewTemplateName] = useState("");
 
   const { data: schemaConfig } = useSchemaDefinitions();
+  const { data: templatesStatus } = useTemplatesStatus();
   const applyTemplate = useSchemaTemplate();
   const saveAnnotations = useSaveAnnotations(imageId);
   const autosave = useAutosaveAnnotations(imageId);
@@ -52,6 +55,7 @@ export default function LabelSidebar({ imageId, projectId }: Props) {
 
   const schemaResults = useRef<SchemaScoreResponse | null>(null);
   const templateDropdownRef = useRef<HTMLDivElement>(null);
+  const saveTemplateRef = useRef<HTMLDivElement>(null);
 
   // Convert local annotations to API format
   const toApiFormat = useCallback((): AnnotationCreate[] => {
@@ -161,6 +165,21 @@ export default function LabelSidebar({ imageId, projectId }: Props) {
     }
   }, [applyTemplate, setAnnotations, assignSchema]);
 
+  // Save current annotations as a template (save + assign schema)
+  const saveAsTemplate = useCallback(async (schemaName: string) => {
+    const name = schemaName.trim().replace(/\s+/g, "_");
+    if (!name) return;
+    setShowSaveTemplate(false);
+    setNewTemplateName("");
+    // Save annotations first
+    await saveAnnotations.mutateAsync(toApiFormat());
+    setHasUnsavedChanges(false);
+    // Assign schema so this image becomes the template source
+    await assignSchema.mutateAsync(name);
+    setCopyStatus(`Saved as template "${name.replace(/_/g, " ")}"`);
+    setTimeout(() => setCopyStatus(null), 2000);
+  }, [saveAnnotations, toApiFormat, setHasUnsavedChanges, assignSchema]);
+
   // Mark done and go to next image
   const markDoneAndNext = useCallback(async () => {
     if (hasUnsavedChanges) {
@@ -204,17 +223,20 @@ export default function LabelSidebar({ imageId, projectId }: Props) {
     }
   }, [runInference, addAnnotation]);
 
-  // Close template dropdown on outside click
+  // Close dropdowns on outside click
   useEffect(() => {
-    if (!showTemplateDropdown) return;
+    if (!showTemplateDropdown && !showSaveTemplate) return;
     const handleClick = (e: MouseEvent) => {
-      if (templateDropdownRef.current && !templateDropdownRef.current.contains(e.target as Node)) {
+      if (showTemplateDropdown && templateDropdownRef.current && !templateDropdownRef.current.contains(e.target as Node)) {
         setShowTemplateDropdown(false);
+      }
+      if (showSaveTemplate && saveTemplateRef.current && !saveTemplateRef.current.contains(e.target as Node)) {
+        setShowSaveTemplate(false);
       }
     };
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
-  }, [showTemplateDropdown]);
+  }, [showTemplateDropdown, showSaveTemplate]);
 
   // Score schemas on load
   useEffect(() => {
@@ -396,15 +418,24 @@ export default function LabelSidebar({ imageId, projectId }: Props) {
                     {(schemaConfig?.schemas || []).length === 0 ? (
                       <div className="text-xs text-gray-500 px-3 py-2">No schemas defined</div>
                     ) : (
-                      (schemaConfig?.schemas || []).map((s: { name: string }) => (
-                        <button
-                          key={s.name}
-                          onClick={() => copyFromTemplate(s.name)}
-                          className="block w-full text-left text-xs px-3 py-1.5 hover:bg-gray-700 text-gray-300"
-                        >
-                          {s.name.replace(/_/g, " ")}
-                        </button>
-                      ))
+                      (schemaConfig?.schemas || []).map((s: { name: string }) => {
+                        const hasTemplate = templatesStatus?.available?.includes(s.name);
+                        return (
+                          <button
+                            key={s.name}
+                            onClick={() => copyFromTemplate(s.name)}
+                            className={`block w-full text-left text-xs px-3 py-1.5 ${
+                              hasTemplate
+                                ? "text-green-400 hover:bg-green-900/40"
+                                : "text-gray-500 hover:bg-gray-700"
+                            }`}
+                            title={hasTemplate ? `Template available: ${s.name.replace(/_/g, " ")}` : "No template yet"}
+                          >
+                            {hasTemplate && <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-400 mr-1.5" />}
+                            {s.name.replace(/_/g, " ")}
+                          </button>
+                        );
+                      })
                     )}
                   </div>
                 )}
@@ -446,6 +477,53 @@ export default function LabelSidebar({ imageId, projectId }: Props) {
           >
             {saveAnnotations.isPending ? "Saving..." : "Save (Ctrl+S)"}
           </button>
+          <div className="relative" ref={saveTemplateRef}>
+            <button
+              onClick={() => setShowSaveTemplate(!showSaveTemplate)}
+              disabled={annotations.length === 0}
+              className="bg-orange-600 hover:bg-orange-700 disabled:opacity-50 px-3 py-2 rounded text-sm font-medium whitespace-nowrap"
+              title="Save annotations and assign a schema (makes this image a template)"
+            >
+              Save as Template
+            </button>
+            {showSaveTemplate && (
+              <div className="absolute right-0 bottom-full mb-1 z-50 bg-gray-800 border border-gray-600 rounded shadow-lg min-w-[200px] p-2">
+                <div className="text-xs text-gray-400 mb-2">Pick existing or type new name:</div>
+                {(schemaConfig?.schemas || []).map((s: { name: string }) => (
+                  <button
+                    key={s.name}
+                    onClick={() => saveAsTemplate(s.name)}
+                    className={`block w-full text-left text-xs px-2 py-1.5 rounded mb-0.5 ${
+                      currentImage?.assigned_schema === s.name
+                        ? "bg-orange-700 text-orange-200"
+                        : "text-gray-300 hover:bg-gray-700"
+                    }`}
+                  >
+                    {s.name.replace(/_/g, " ")}
+                    {currentImage?.assigned_schema === s.name && " (current)"}
+                  </button>
+                ))}
+                <div className="border-t border-gray-700 mt-1 pt-1">
+                  <form onSubmit={(e) => { e.preventDefault(); saveAsTemplate(newTemplateName); }} className="flex gap-1">
+                    <input
+                      type="text"
+                      value={newTemplateName}
+                      onChange={(e) => setNewTemplateName(e.target.value)}
+                      placeholder="New name..."
+                      className="flex-1 bg-gray-900 border border-gray-600 rounded px-2 py-1 text-xs text-gray-200 placeholder-gray-500"
+                    />
+                    <button
+                      type="submit"
+                      disabled={!newTemplateName.trim()}
+                      className="bg-orange-600 hover:bg-orange-700 disabled:opacity-50 px-2 py-1 rounded text-xs"
+                    >
+                      Save
+                    </button>
+                  </form>
+                </div>
+              </div>
+            )}
+          </div>
           {hasUnsavedChanges && (
             <span className="text-yellow-500 text-xs">Unsaved</span>
           )}

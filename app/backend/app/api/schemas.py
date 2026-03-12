@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select
+from sqlalchemy import select, func, exists
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..database import get_db
@@ -69,3 +69,25 @@ async def get_schema_template(schema_name: str, db: AsyncSession = Depends(get_d
             return annotations
 
     raise HTTPException(status_code=404, detail=f"No template found for schema '{schema_name}'")
+
+
+@router.get("/templates-status")
+async def get_templates_status(db: AsyncSession = Depends(get_db)):
+    """Return which schemas have at least one labeled image with annotations (i.e. a usable template)."""
+    # Subquery: images that have at least one annotation
+    has_annotations = (
+        select(Annotation.image_id)
+        .group_by(Annotation.image_id)
+        .having(func.count() > 0)
+        .subquery()
+    )
+    # Get distinct assigned_schema values for images that have annotations
+    stmt = (
+        select(ImageRecord.assigned_schema)
+        .where(ImageRecord.assigned_schema.isnot(None))
+        .where(ImageRecord.id.in_(select(has_annotations.c.image_id)))
+        .distinct()
+    )
+    result = await db.execute(stmt)
+    schemas_with_templates = [row[0] for row in result.all()]
+    return {"available": schemas_with_templates}

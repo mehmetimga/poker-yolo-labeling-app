@@ -25,6 +25,7 @@ export function useSaveAnnotations(imageId: number) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["annotations", imageId] });
       queryClient.invalidateQueries({ queryKey: ["images"] });
+      queryClient.invalidateQueries({ queryKey: ["templates-status"] });
     },
   });
 }

@@ -51,6 +51,17 @@ export function useAssignSchema(imageId: number) {
   });
 }
 
+export function useTemplatesStatus() {
+  return useQuery<{ available: string[] }>({
+    queryKey: ["templates-status"],
+    queryFn: async () => {
+      const { data } = await api.get("/schemas/templates-status");
+      return data;
+    },
+    staleTime: 30_000,
+  });
+}
+
 export function useSchemaTemplate() {
   return useMutation({
     mutationFn: async (schemaName: string): Promise<Annotation[]> => {
