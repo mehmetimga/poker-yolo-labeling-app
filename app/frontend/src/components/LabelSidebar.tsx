@@ -3,7 +3,7 @@ import { useAnnotationStore } from "@/stores/annotationStore";
 import { useTaxonomy, useScoreSchemas, useAssignSchema } from "@/api/schemas";
 import { useSaveAnnotations, useAutosaveAnnotations } from "@/api/annotations";
 import { useExportYolo, useExportMetadata } from "@/api/export";
-import { useImages, useUpdateImageStatus, useRunInference } from "@/api/images";
+import { useImages, useImage, useUpdateImageStatus, useRunInference } from "@/api/images";
 import { useProjectStore } from "@/stores/projectStore";
 import api from "@/api/client";
 import LabelDropdown from "./LabelDropdown";
@@ -34,6 +34,7 @@ export default function LabelSidebar({ imageId, projectId }: Props) {
   } = useAnnotationStore();
   const { setSelectedImageId } = useProjectStore();
   const { data: images } = useImages(projectId);
+  const { data: currentImage } = useImage(imageId);
   const [copyStatus, setCopyStatus] = useState<string | null>(null);
 
   const saveAnnotations = useSaveAnnotations(imageId);
@@ -352,6 +353,7 @@ export default function LabelSidebar({ imageId, projectId }: Props) {
           <SchemaSuggestionPanel
             imageId={imageId}
             schemaResults={scoreSchemas.data || null}
+            assignedSchema={currentImage?.assigned_schema || null}
             onAssign={(name) => assignSchema.mutate(name)}
           />
         </div>

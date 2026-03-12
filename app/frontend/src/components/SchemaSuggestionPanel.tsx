@@ -4,11 +4,13 @@ import type { SchemaScoreResponse } from "@/types";
 interface Props {
   imageId: number;
   schemaResults: SchemaScoreResponse | null;
+  assignedSchema: string | null;
   onAssign: (schemaName: string) => void;
 }
 
 export default function SchemaSuggestionPanel({
   schemaResults,
+  assignedSchema,
   onAssign,
 }: Props) {
   const { setActiveLabel, setActiveTool } = useAnnotationStore();
@@ -32,6 +34,12 @@ export default function SchemaSuggestionPanel({
       <h4 className="text-xs font-semibold text-gray-400 uppercase mb-2">
         Schema Suggestions
       </h4>
+      {assignedSchema && (
+        <div className="text-xs text-green-400 mb-2 flex items-center gap-1">
+          <span>Assigned:</span>
+          <span className="font-medium">{assignedSchema.replace(/_/g, " ")}</span>
+        </div>
+      )}
       <div className="space-y-2">
         {top5.map((match) => (
           <div
@@ -42,12 +50,16 @@ export default function SchemaSuggestionPanel({
               <span className="text-sm font-medium">
                 {match.schema.replace(/_/g, " ")}
               </span>
-              <button
-                onClick={() => onAssign(match.schema)}
-                className="text-xs bg-blue-600 hover:bg-blue-700 px-2 py-0.5 rounded"
-              >
-                Assign
-              </button>
+              {assignedSchema === match.schema ? (
+                <span className="text-xs text-green-400 px-2 py-0.5">Assigned</span>
+              ) : (
+                <button
+                  onClick={() => onAssign(match.schema)}
+                  className="text-xs bg-blue-600 hover:bg-blue-700 px-2 py-0.5 rounded"
+                >
+                  Assign
+                </button>
+              )}
             </div>
             {/* Score bar */}
             <div className="w-full bg-gray-700 rounded-full h-1.5 mb-1">
