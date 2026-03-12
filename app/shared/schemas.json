@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 3,
   "schemas": [
     {
       "name": "table_preflop_my_turn",
@@ -18,7 +18,14 @@
         { "label": "active_turn_indicator", "count": 1 },
         { "label": "slider", "count": 1, "region": "bottom" },
         { "label": "stack_amount", "count_min": 1, "count_max": 9 },
-        { "label": "bet_amount", "count_min": 0, "count_max": 9 }
+        { "label": "bet_amount", "count_min": 0, "count_max": 9 },
+        { "label": "player_name", "count_min": 0, "count_max": 9 },
+        { "label": "all_in_label", "count_min": 0, "count_max": 9 },
+        { "label": "folded_label", "count_min": 0, "count_max": 9 },
+        { "label": "sitting_out_label", "count_min": 0, "count_max": 2 },
+        { "label": "add_table_button", "count": 1 },
+        { "label": "menu_button", "count": 1 },
+        { "label": "action_label", "count_min": 0, "count_max": 9 }
       ],
       "forbidden": [
         { "label": "winner_banner" },
@@ -39,7 +46,14 @@
         { "label": "seat", "count_min": 2, "count_max": 9 },
         { "label": "waiting_label", "count": 1 },
         { "label": "timer", "count": 1 },
-        { "label": "stack_amount", "count_min": 1, "count_max": 9 }
+        { "label": "stack_amount", "count_min": 1, "count_max": 9 },
+        { "label": "player_name", "count_min": 0, "count_max": 9 },
+        { "label": "all_in_label", "count_min": 0, "count_max": 9 },
+        { "label": "folded_label", "count_min": 0, "count_max": 9 },
+        { "label": "sitting_out_label", "count_min": 0, "count_max": 2 },
+        { "label": "add_table_button", "count": 1 },
+        { "label": "menu_button", "count": 1 },
+        { "label": "action_label", "count_min": 0, "count_max": 9 }
       ],
       "forbidden": [
         { "label": "fold_button" },
@@ -68,7 +82,15 @@
         { "label": "dealer_button", "count": 1 },
         { "label": "seat", "count_min": 2, "count_max": 9 },
         { "label": "timer", "count": 1 },
-        { "label": "slider", "count": 1, "region": "bottom" }
+        { "label": "slider", "count": 1, "region": "bottom" },
+        { "label": "player_name", "count_min": 0, "count_max": 9 },
+        { "label": "all_in_label", "count_min": 0, "count_max": 9 },
+        { "label": "folded_label", "count_min": 0, "count_max": 9 },
+        { "label": "sitting_out_label", "count_min": 0, "count_max": 2 },
+        { "label": "add_table_button", "count": 1 },
+        { "label": "menu_button", "count": 1 },
+        { "label": "action_label", "count_min": 0, "count_max": 9 },
+        { "label": "hand_strength_label", "count": 1 }
       ],
       "forbidden": [
         { "label": "winner_banner" },
@@ -87,7 +109,15 @@
         { "label": "dealer_button", "count": 1 },
         { "label": "seat", "count_min": 2, "count_max": 9 },
         { "label": "waiting_label", "count": 1 },
-        { "label": "timer", "count": 1 }
+        { "label": "timer", "count": 1 },
+        { "label": "player_name", "count_min": 0, "count_max": 9 },
+        { "label": "all_in_label", "count_min": 0, "count_max": 9 },
+        { "label": "folded_label", "count_min": 0, "count_max": 9 },
+        { "label": "sitting_out_label", "count_min": 0, "count_max": 2 },
+        { "label": "add_table_button", "count": 1 },
+        { "label": "menu_button", "count": 1 },
+        { "label": "action_label", "count_min": 0, "count_max": 9 },
+        { "label": "hand_strength_label", "count": 1 }
       ],
       "forbidden": [
         { "label": "fold_button" },
@@ -115,7 +145,15 @@
         { "label": "dealer_button", "count": 1 },
         { "label": "seat", "count_min": 2, "count_max": 9 },
         { "label": "timer", "count": 1 },
-        { "label": "slider", "count": 1, "region": "bottom" }
+        { "label": "slider", "count": 1, "region": "bottom" },
+        { "label": "player_name", "count_min": 0, "count_max": 9 },
+        { "label": "all_in_label", "count_min": 0, "count_max": 9 },
+        { "label": "folded_label", "count_min": 0, "count_max": 9 },
+        { "label": "sitting_out_label", "count_min": 0, "count_max": 2 },
+        { "label": "add_table_button", "count": 1 },
+        { "label": "menu_button", "count": 1 },
+        { "label": "action_label", "count_min": 0, "count_max": 9 },
+        { "label": "hand_strength_label", "count": 1 }
       ],
       "forbidden": [
         { "label": "winner_banner" },
@@ -133,7 +171,15 @@
         { "label": "pot_amount", "count": 1, "region": "center" },
         { "label": "dealer_button", "count": 1 },
         { "label": "seat", "count_min": 2, "count_max": 9 },
-        { "label": "timer", "count": 1 }
+        { "label": "timer", "count": 1 },
+        { "label": "player_name", "count_min": 0, "count_max": 9 },
+        { "label": "all_in_label", "count_min": 0, "count_max": 9 },
+        { "label": "folded_label", "count_min": 0, "count_max": 9 },
+        { "label": "sitting_out_label", "count_min": 0, "count_max": 2 },
+        { "label": "add_table_button", "count": 1 },
+        { "label": "menu_button", "count": 1 },
+        { "label": "action_label", "count_min": 0, "count_max": 9 },
+        { "label": "hand_strength_label", "count": 1 }
       ],
       "forbidden": [
         { "label": "fold_button" },
@@ -161,7 +207,15 @@
         { "label": "dealer_button", "count": 1 },
         { "label": "seat", "count_min": 2, "count_max": 9 },
         { "label": "timer", "count": 1 },
-        { "label": "slider", "count": 1, "region": "bottom" }
+        { "label": "slider", "count": 1, "region": "bottom" },
+        { "label": "player_name", "count_min": 0, "count_max": 9 },
+        { "label": "all_in_label", "count_min": 0, "count_max": 9 },
+        { "label": "folded_label", "count_min": 0, "count_max": 9 },
+        { "label": "sitting_out_label", "count_min": 0, "count_max": 2 },
+        { "label": "add_table_button", "count": 1 },
+        { "label": "menu_button", "count": 1 },
+        { "label": "action_label", "count_min": 0, "count_max": 9 },
+        { "label": "hand_strength_label", "count": 1 }
       ],
       "forbidden": [
         { "label": "winner_banner" },
@@ -179,7 +233,15 @@
         { "label": "pot_amount", "count": 1, "region": "center" },
         { "label": "dealer_button", "count": 1 },
         { "label": "seat", "count_min": 2, "count_max": 9 },
-        { "label": "timer", "count": 1 }
+        { "label": "timer", "count": 1 },
+        { "label": "player_name", "count_min": 0, "count_max": 9 },
+        { "label": "all_in_label", "count_min": 0, "count_max": 9 },
+        { "label": "folded_label", "count_min": 0, "count_max": 9 },
+        { "label": "sitting_out_label", "count_min": 0, "count_max": 2 },
+        { "label": "add_table_button", "count": 1 },
+        { "label": "menu_button", "count": 1 },
+        { "label": "action_label", "count_min": 0, "count_max": 9 },
+        { "label": "hand_strength_label", "count": 1 }
       ],
       "forbidden": [
         { "label": "fold_button" },
@@ -201,7 +263,17 @@
         { "label": "winner_banner", "count": 1 },
         { "label": "hand_result_popup", "count": 1 },
         { "label": "pot_amount", "count": 1, "region": "center" },
-        { "label": "seat", "count_min": 2, "count_max": 9 }
+        { "label": "seat", "count_min": 2, "count_max": 9 },
+        { "label": "player_name", "count_min": 0, "count_max": 9 },
+        { "label": "all_in_label", "count_min": 0, "count_max": 9 },
+        { "label": "folded_label", "count_min": 0, "count_max": 9 },
+        { "label": "sitting_out_label", "count_min": 0, "count_max": 2 },
+        { "label": "add_table_button", "count": 1 },
+        { "label": "menu_button", "count": 1 },
+        { "label": "opponent_card", "count_min": 0, "count_max": 18 },
+        { "label": "win_probability", "count_min": 0, "count_max": 9 },
+        { "label": "hand_strength_label", "count_min": 0, "count_max": 9 },
+        { "label": "action_label", "count_min": 0, "count_max": 9 }
       ],
       "forbidden": [
         { "label": "fold_button" },
@@ -238,7 +310,8 @@
         { "label": "confirm_button", "count": 1 },
         { "label": "cancel_button", "count": 1 },
         { "label": "slider", "count": 1 },
-        { "label": "balance_label", "count": 1 }
+        { "label": "balance_label", "count": 1 },
+        { "label": "leave_table_button", "count": 1 }
       ],
       "forbidden": [
         { "label": "hero_card" },
@@ -314,13 +387,48 @@
         { "label": "hero_card", "count": 2 },
         { "label": "board_card", "count_min": 3, "count_max": 5, "region": "center" },
         { "label": "pot_amount", "count": 1 },
-        { "label": "confirm_button", "count": 1 }
+        { "label": "confirm_button", "count": 1 },
+        { "label": "opponent_card", "count_min": 0, "count_max": 18 },
+        { "label": "win_probability", "count_min": 0, "count_max": 9 },
+        { "label": "hand_strength_label", "count_min": 0, "count_max": 9 }
       ],
       "forbidden": [
         { "label": "fold_button" },
         { "label": "call_button" },
         { "label": "raise_button" },
         { "label": "buyin_popup" }
+      ]
+    },
+    {
+      "name": "rebuy_screen",
+      "description": "Hero is busted, rebuy required screen showing",
+      "required": [
+        { "label": "rebuy_popup", "count": 1 },
+        { "label": "rebuy_button", "count": 1 }
+      ],
+      "optional": [
+        { "label": "leave_table_button", "count": 1 },
+        { "label": "pot_amount", "count": 1 },
+        { "label": "seat", "count_min": 2, "count_max": 9 },
+        { "label": "stack_amount", "count_min": 0, "count_max": 9 },
+        { "label": "player_name", "count_min": 0, "count_max": 9 },
+        { "label": "all_in_label", "count_min": 0, "count_max": 9 },
+        { "label": "sitting_out_label", "count_min": 0, "count_max": 2 },
+        { "label": "dealer_button", "count": 1 },
+        { "label": "bet_amount", "count_min": 0, "count_max": 9 },
+        { "label": "table_name", "count": 1 },
+        { "label": "add_table_button", "count": 1 },
+        { "label": "menu_button", "count": 1 },
+        { "label": "opponent_card", "count_min": 0, "count_max": 18 },
+        { "label": "win_probability", "count_min": 0, "count_max": 9 },
+        { "label": "hand_strength_label", "count": 1 },
+        { "label": "board_card", "count_min": 0, "count_max": 5 }
+      ],
+      "forbidden": [
+        { "label": "fold_button" },
+        { "label": "call_button" },
+        { "label": "raise_button" },
+        { "label": "hero_card" }
       ]
     }
   ]

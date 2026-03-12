@@ -13,7 +13,10 @@ export default function LabelDropdown({ labels, value, onChange }: Props) {
   const filtered = useMemo(() => {
     if (!search) return labels;
     const q = search.toLowerCase();
-    return labels.filter((l) => l.name.toLowerCase().includes(q));
+    return labels.filter((l) =>
+      l.name.toLowerCase().includes(q) ||
+      (l.description && l.description.toLowerCase().includes(q))
+    );
   }, [labels, search]);
 
   const grouped = useMemo(() => {
@@ -48,6 +51,7 @@ export default function LabelDropdown({ labels, value, onChange }: Props) {
                   onChange(label.name);
                   setSearch("");
                 }}
+                title={label.description || label.name}
                 className={`w-full text-left px-2 py-1 rounded text-sm flex items-center gap-2 ${
                   value === label.name
                     ? "bg-blue-600"
@@ -58,7 +62,7 @@ export default function LabelDropdown({ labels, value, onChange }: Props) {
                   className="w-3 h-3 rounded-sm shrink-0"
                   style={{ backgroundColor: label.color }}
                 />
-                <span className="flex-1">{label.name}</span>
+                <span className="flex-1 truncate">{label.name}</span>
                 {label.shortcut && (
                   <span className="text-xs text-gray-500">
                     {label.shortcut}

@@ -72,6 +72,7 @@ export interface TaxonomyLabel {
   group: string;
   color: string;
   shortcut: string | null;
+  description?: string;
 }
 
 export interface Taxonomy {
