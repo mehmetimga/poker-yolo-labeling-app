@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "labels": [
+    { "id": 0, "name": "poker_table", "group": "table_layout", "color": "#6b7280", "shortcut": null },
+    { "id": 1, "name": "seat", "group": "table_layout", "color": "#9ca3af", "shortcut": null },
+    { "id": 2, "name": "hero_seat", "group": "table_layout", "color": "#f97316", "shortcut": null },
+    { "id": 3, "name": "dealer_button", "group": "table_layout", "color": "#fbbf24", "shortcut": null },
+    { "id": 4, "name": "community_cards_area", "group": "table_layout", "color": "#a3e635", "shortcut": null },
+    { "id": 5, "name": "hero_cards_area", "group": "table_layout", "color": "#fb923c", "shortcut": null },
+    { "id": 6, "name": "pot_area", "group": "table_layout", "color": "#facc15", "shortcut": null },
+    { "id": 7, "name": "player_info_panel", "group": "table_layout", "color": "#94a3b8", "shortcut": null },
+
+    { "id": 8, "name": "hero_card", "group": "cards_objects", "color": "#ef4444", "shortcut": "1" },
+    { "id": 9, "name": "board_card", "group": "cards_objects", "color": "#3b82f6", "shortcut": "2" },
+    { "id": 10, "name": "facedown_card", "group": "cards_objects", "color": "#6366f1", "shortcut": null },
+    { "id": 11, "name": "pot_amount", "group": "cards_objects", "color": "#eab308", "shortcut": null },
+    { "id": 12, "name": "stack_amount", "group": "cards_objects", "color": "#f59e0b", "shortcut": null },
+    { "id": 13, "name": "bet_amount", "group": "cards_objects", "color": "#d97706", "shortcut": null },
+    { "id": 14, "name": "blind_indicator", "group": "cards_objects", "color": "#ca8a04", "shortcut": null },
+
+    { "id": 15, "name": "fold_button", "group": "action_controls", "color": "#22c55e", "shortcut": "3" },
+    { "id": 16, "name": "call_button", "group": "action_controls", "color": "#14b8a6", "shortcut": "4" },
+    { "id": 17, "name": "check_button", "group": "action_controls", "color": "#06b6d4", "shortcut": "5" },
+    { "id": 18, "name": "raise_button", "group": "action_controls", "color": "#a855f7", "shortcut": "6" },
+    { "id": 19, "name": "bet_button", "group": "action_controls", "color": "#8b5cf6", "shortcut": "7" },
+    { "id": 20, "name": "all_in_button", "group": "action_controls", "color": "#ec4899", "shortcut": "8" },
+    { "id": 21, "name": "slider", "group": "action_controls", "color": "#7c3aed", "shortcut": null },
+    { "id": 22, "name": "quick_bet_button", "group": "action_controls", "color": "#c084fc", "shortcut": null },
+    { "id": 23, "name": "confirm_button", "group": "action_controls", "color": "#34d399", "shortcut": null },
+    { "id": 24, "name": "cancel_button", "group": "action_controls", "color": "#f87171", "shortcut": null },
+
+    { "id": 25, "name": "timer", "group": "status_indicators", "color": "#f43f5e", "shortcut": "9" },
+    { "id": 26, "name": "active_turn_indicator", "group": "status_indicators", "color": "#fb7185", "shortcut": null },
+    { "id": 27, "name": "waiting_label", "group": "status_indicators", "color": "#fda4af", "shortcut": null },
+    { "id": 28, "name": "winner_banner", "group": "status_indicators", "color": "#fbbf24", "shortcut": null },
+    { "id": 29, "name": "hand_result_popup", "group": "status_indicators", "color": "#fcd34d", "shortcut": null },
+    { "id": 30, "name": "reconnect_popup", "group": "status_indicators", "color": "#f87171", "shortcut": null },
+    { "id": 31, "name": "buyin_popup", "group": "status_indicators", "color": "#fb923c", "shortcut": null },
+    { "id": 32, "name": "lobby_button", "group": "status_indicators", "color": "#a78bfa", "shortcut": null },
+    { "id": 33, "name": "chat_button", "group": "status_indicators", "color": "#67e8f9", "shortcut": null },
+    { "id": 34, "name": "settings_button", "group": "status_indicators", "color": "#d1d5db", "shortcut": null },
+
+    { "id": 35, "name": "table_name", "group": "text_ui", "color": "#cbd5e1", "shortcut": null },
+    { "id": 36, "name": "tournament_name", "group": "text_ui", "color": "#e2e8f0", "shortcut": null },
+    { "id": 37, "name": "balance_label", "group": "text_ui", "color": "#e5e7eb", "shortcut": null },
+    { "id": 38, "name": "blinds_label", "group": "text_ui", "color": "#f3f4f6", "shortcut": null }
+  ]
+}

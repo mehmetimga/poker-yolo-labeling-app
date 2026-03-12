@@ -1,0 +1,27 @@
+version: "3.8"
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/data:/app/data
+      - ./shared:/app/shared
+      - ./datasets:/app/datasets
+    environment:
+      - LABELING_DATABASE_URL=sqlite+aiosqlite:///./data/poker_labeling.db
+      - LABELING_SHARED_DIR=/app/shared
+      - LABELING_IMAGES_DIR=/app/datasets
+
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+

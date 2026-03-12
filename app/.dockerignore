@@ -1,0 +1,6 @@
+datasets/
+backend/data/
+*.db
+__pycache__
+node_modules
+.pytest_cache

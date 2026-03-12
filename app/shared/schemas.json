@@ -1,0 +1,327 @@
+{
+  "version": 1,
+  "schemas": [
+    {
+      "name": "table_preflop_my_turn",
+      "description": "Preflop round, hero's turn to act",
+      "required": [
+        { "label": "hero_card", "count": 2, "region": "bottom_center" },
+        { "label": "fold_button", "count": 1, "region": "bottom" },
+        { "label": "call_button", "count": 1, "region": "bottom" },
+        { "label": "raise_button", "count": 1, "region": "bottom" }
+      ],
+      "optional": [
+        { "label": "pot_amount", "count": 1, "region": "center" },
+        { "label": "dealer_button", "count": 1 },
+        { "label": "seat", "count_min": 2, "count_max": 9 },
+        { "label": "timer", "count": 1 },
+        { "label": "active_turn_indicator", "count": 1 },
+        { "label": "slider", "count": 1, "region": "bottom" },
+        { "label": "stack_amount", "count_min": 1, "count_max": 9 },
+        { "label": "bet_amount", "count_min": 0, "count_max": 9 }
+      ],
+      "forbidden": [
+        { "label": "winner_banner" },
+        { "label": "buyin_popup" },
+        { "label": "hand_result_popup" },
+        { "label": "board_card" }
+      ]
+    },
+    {
+      "name": "table_preflop_waiting",
+      "description": "Preflop round, waiting for other players",
+      "required": [
+        { "label": "hero_card", "count": 2, "region": "bottom_center" }
+      ],
+      "optional": [
+        { "label": "pot_amount", "count": 1, "region": "center" },
+        { "label": "dealer_button", "count": 1 },
+        { "label": "seat", "count_min": 2, "count_max": 9 },
+        { "label": "waiting_label", "count": 1 },
+        { "label": "timer", "count": 1 },
+        { "label": "stack_amount", "count_min": 1, "count_max": 9 }
+      ],
+      "forbidden": [
+        { "label": "fold_button" },
+        { "label": "call_button" },
+        { "label": "raise_button" },
+        { "label": "check_button" },
+        { "label": "board_card" },
+        { "label": "winner_banner" },
+        { "label": "buyin_popup" }
+      ]
+    },
+    {
+      "name": "table_flop_my_turn",
+      "description": "Flop round, hero's turn to act",
+      "required": [
+        { "label": "hero_card", "count": 2, "region": "bottom_center" },
+        { "label": "board_card", "count": 3, "region": "center" }
+      ],
+      "optional": [
+        { "label": "fold_button", "count": 1, "region": "bottom" },
+        { "label": "call_button", "count": 1, "region": "bottom" },
+        { "label": "check_button", "count": 1, "region": "bottom" },
+        { "label": "raise_button", "count": 1, "region": "bottom" },
+        { "label": "bet_button", "count": 1, "region": "bottom" },
+        { "label": "pot_amount", "count": 1, "region": "center" },
+        { "label": "dealer_button", "count": 1 },
+        { "label": "seat", "count_min": 2, "count_max": 9 },
+        { "label": "timer", "count": 1 },
+        { "label": "slider", "count": 1, "region": "bottom" }
+      ],
+      "forbidden": [
+        { "label": "winner_banner" },
+        { "label": "buyin_popup" }
+      ]
+    },
+    {
+      "name": "table_flop_waiting",
+      "description": "Flop round, waiting for other players",
+      "required": [
+        { "label": "hero_card", "count": 2, "region": "bottom_center" },
+        { "label": "board_card", "count": 3, "region": "center" }
+      ],
+      "optional": [
+        { "label": "pot_amount", "count": 1, "region": "center" },
+        { "label": "dealer_button", "count": 1 },
+        { "label": "seat", "count_min": 2, "count_max": 9 },
+        { "label": "waiting_label", "count": 1 },
+        { "label": "timer", "count": 1 }
+      ],
+      "forbidden": [
+        { "label": "fold_button" },
+        { "label": "call_button" },
+        { "label": "raise_button" },
+        { "label": "check_button" },
+        { "label": "winner_banner" },
+        { "label": "buyin_popup" }
+      ]
+    },
+    {
+      "name": "table_turn_my_turn",
+      "description": "Turn round, hero's turn to act",
+      "required": [
+        { "label": "hero_card", "count": 2, "region": "bottom_center" },
+        { "label": "board_card", "count": 4, "region": "center" }
+      ],
+      "optional": [
+        { "label": "fold_button", "count": 1, "region": "bottom" },
+        { "label": "call_button", "count": 1, "region": "bottom" },
+        { "label": "check_button", "count": 1, "region": "bottom" },
+        { "label": "raise_button", "count": 1, "region": "bottom" },
+        { "label": "bet_button", "count": 1, "region": "bottom" },
+        { "label": "pot_amount", "count": 1, "region": "center" },
+        { "label": "dealer_button", "count": 1 },
+        { "label": "seat", "count_min": 2, "count_max": 9 },
+        { "label": "timer", "count": 1 },
+        { "label": "slider", "count": 1, "region": "bottom" }
+      ],
+      "forbidden": [
+        { "label": "winner_banner" },
+        { "label": "buyin_popup" }
+      ]
+    },
+    {
+      "name": "table_turn_waiting",
+      "description": "Turn round, waiting for other players",
+      "required": [
+        { "label": "hero_card", "count": 2, "region": "bottom_center" },
+        { "label": "board_card", "count": 4, "region": "center" }
+      ],
+      "optional": [
+        { "label": "pot_amount", "count": 1, "region": "center" },
+        { "label": "dealer_button", "count": 1 },
+        { "label": "seat", "count_min": 2, "count_max": 9 },
+        { "label": "timer", "count": 1 }
+      ],
+      "forbidden": [
+        { "label": "fold_button" },
+        { "label": "call_button" },
+        { "label": "raise_button" },
+        { "label": "check_button" },
+        { "label": "winner_banner" },
+        { "label": "buyin_popup" }
+      ]
+    },
+    {
+      "name": "table_river_my_turn",
+      "description": "River round, hero's turn to act",
+      "required": [
+        { "label": "hero_card", "count": 2, "region": "bottom_center" },
+        { "label": "board_card", "count": 5, "region": "center" }
+      ],
+      "optional": [
+        { "label": "fold_button", "count": 1, "region": "bottom" },
+        { "label": "call_button", "count": 1, "region": "bottom" },
+        { "label": "check_button", "count": 1, "region": "bottom" },
+        { "label": "raise_button", "count": 1, "region": "bottom" },
+        { "label": "bet_button", "count": 1, "region": "bottom" },
+        { "label": "pot_amount", "count": 1, "region": "center" },
+        { "label": "dealer_button", "count": 1 },
+        { "label": "seat", "count_min": 2, "count_max": 9 },
+        { "label": "timer", "count": 1 },
+        { "label": "slider", "count": 1, "region": "bottom" }
+      ],
+      "forbidden": [
+        { "label": "winner_banner" },
+        { "label": "buyin_popup" }
+      ]
+    },
+    {
+      "name": "table_river_waiting",
+      "description": "River round, waiting for other players",
+      "required": [
+        { "label": "hero_card", "count": 2, "region": "bottom_center" },
+        { "label": "board_card", "count": 5, "region": "center" }
+      ],
+      "optional": [
+        { "label": "pot_amount", "count": 1, "region": "center" },
+        { "label": "dealer_button", "count": 1 },
+        { "label": "seat", "count_min": 2, "count_max": 9 },
+        { "label": "timer", "count": 1 }
+      ],
+      "forbidden": [
+        { "label": "fold_button" },
+        { "label": "call_button" },
+        { "label": "raise_button" },
+        { "label": "check_button" },
+        { "label": "winner_banner" },
+        { "label": "buyin_popup" }
+      ]
+    },
+    {
+      "name": "table_showdown",
+      "description": "Showdown — cards revealed, determining winner",
+      "required": [
+        { "label": "board_card", "count": 5, "region": "center" }
+      ],
+      "optional": [
+        { "label": "hero_card", "count": 2, "region": "bottom_center" },
+        { "label": "winner_banner", "count": 1 },
+        { "label": "hand_result_popup", "count": 1 },
+        { "label": "pot_amount", "count": 1, "region": "center" },
+        { "label": "seat", "count_min": 2, "count_max": 9 }
+      ],
+      "forbidden": [
+        { "label": "fold_button" },
+        { "label": "call_button" },
+        { "label": "raise_button" },
+        { "label": "buyin_popup" }
+      ]
+    },
+    {
+      "name": "all_in_popup",
+      "description": "All-in confirmation or all-in state displayed",
+      "required": [
+        { "label": "all_in_button", "count": 1 }
+      ],
+      "optional": [
+        { "label": "hero_card", "count": 2, "region": "bottom_center" },
+        { "label": "board_card", "count_min": 0, "count_max": 5, "region": "center" },
+        { "label": "pot_amount", "count": 1, "region": "center" },
+        { "label": "confirm_button", "count": 1 },
+        { "label": "cancel_button", "count": 1 }
+      ],
+      "forbidden": [
+        { "label": "buyin_popup" },
+        { "label": "winner_banner" }
+      ]
+    },
+    {
+      "name": "buyin_popup",
+      "description": "Buy-in dialog for joining a table",
+      "required": [
+        { "label": "buyin_popup", "count": 1 }
+      ],
+      "optional": [
+        { "label": "confirm_button", "count": 1 },
+        { "label": "cancel_button", "count": 1 },
+        { "label": "slider", "count": 1 },
+        { "label": "balance_label", "count": 1 }
+      ],
+      "forbidden": [
+        { "label": "hero_card" },
+        { "label": "board_card" },
+        { "label": "fold_button" },
+        { "label": "winner_banner" }
+      ]
+    },
+    {
+      "name": "tournament_lobby",
+      "description": "Tournament lobby screen",
+      "required": [
+        { "label": "tournament_name", "count": 1 }
+      ],
+      "optional": [
+        { "label": "lobby_button", "count": 1 },
+        { "label": "settings_button", "count": 1 },
+        { "label": "balance_label", "count": 1 },
+        { "label": "blinds_label", "count": 1 }
+      ],
+      "forbidden": [
+        { "label": "hero_card" },
+        { "label": "board_card" },
+        { "label": "fold_button" },
+        { "label": "poker_table" }
+      ]
+    },
+    {
+      "name": "cash_lobby",
+      "description": "Cash game lobby screen",
+      "required": [
+        { "label": "table_name", "count_min": 1 }
+      ],
+      "optional": [
+        { "label": "lobby_button", "count": 1 },
+        { "label": "settings_button", "count": 1 },
+        { "label": "balance_label", "count": 1 },
+        { "label": "blinds_label", "count_min": 1 }
+      ],
+      "forbidden": [
+        { "label": "hero_card" },
+        { "label": "board_card" },
+        { "label": "fold_button" },
+        { "label": "poker_table" }
+      ]
+    },
+    {
+      "name": "table_loading",
+      "description": "Table is loading, not yet ready",
+      "required": [
+        { "label": "poker_table", "count": 1 }
+      ],
+      "optional": [
+        { "label": "seat", "count_min": 0, "count_max": 9 },
+        { "label": "reconnect_popup", "count": 1 }
+      ],
+      "forbidden": [
+        { "label": "hero_card" },
+        { "label": "board_card" },
+        { "label": "fold_button" },
+        { "label": "call_button" },
+        { "label": "winner_banner" }
+      ]
+    },
+    {
+      "name": "result_popup",
+      "description": "Hand result or round result popup",
+      "required": [
+        { "label": "hand_result_popup", "count": 1 }
+      ],
+      "optional": [
+        { "label": "winner_banner", "count": 1 },
+        { "label": "hero_card", "count": 2 },
+        { "label": "board_card", "count_min": 3, "count_max": 5, "region": "center" },
+        { "label": "pot_amount", "count": 1 },
+        { "label": "confirm_button", "count": 1 }
+      ],
+      "forbidden": [
+        { "label": "fold_button" },
+        { "label": "call_button" },
+        { "label": "raise_button" },
+        { "label": "buyin_popup" }
+      ]
+    }
+  ]
+}
