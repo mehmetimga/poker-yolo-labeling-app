@@ -114,7 +114,7 @@ export default function ProjectPage() {
       <div className="flex-1 flex overflow-hidden">
         {/* Left: Image Queue */}
         <div className="w-64 bg-gray-850 border-r border-gray-700 overflow-y-auto shrink-0">
-          <ImageQueue images={images || []} />
+          <ImageQueue images={images || []} projectId={pid} />
         </div>
 
         {/* Center: Canvas */}

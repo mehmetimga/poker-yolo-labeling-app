@@ -9,6 +9,8 @@ class Settings(BaseSettings):
     data_dir: Path = Path(__file__).resolve().parent.parent / "data"
     images_dir: Path = Path(__file__).resolve().parent.parent.parent / "datasets"
     cors_origins: list[str] = ["http://localhost:5173", "http://localhost:3000"]
+    yolo_model_path: str | None = None
+    yolo_confidence_threshold: float = 0.25
 
     model_config = {"env_prefix": "LABELING_"}
 

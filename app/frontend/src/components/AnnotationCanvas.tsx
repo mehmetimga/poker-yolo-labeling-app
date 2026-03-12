@@ -36,6 +36,10 @@ export default function AnnotationCanvas({ imageId }: Props) {
     panOffset,
     setPanOffset,
     setSelectedAnnotationId,
+    undo,
+    redo,
+    undoStack,
+    redoStack,
   } = useAnnotationStore();
 
   const { data: serverAnnotations } = useAnnotations(imageId);
@@ -414,6 +418,28 @@ export default function AnnotationCanvas({ imageId }: Props) {
           title="Original size (100%)"
         >
           1:1
+        </button>
+
+        <div className="w-px h-5 bg-gray-600 mx-1" />
+
+        {/* Undo */}
+        <button
+          onClick={undo}
+          disabled={undoStack.length === 0}
+          className="w-7 h-7 flex items-center justify-center rounded hover:bg-gray-700 text-gray-300 disabled:text-gray-600 disabled:hover:bg-transparent"
+          title="Undo (Ctrl+Z)"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7v6h6"/><path d="M3 13a9 9 0 0 1 15.36-6.36L21 9"/></svg>
+        </button>
+
+        {/* Redo */}
+        <button
+          onClick={redo}
+          disabled={redoStack.length === 0}
+          className="w-7 h-7 flex items-center justify-center rounded hover:bg-gray-700 text-gray-300 disabled:text-gray-600 disabled:hover:bg-transparent"
+          title="Redo (Ctrl+Y / Ctrl+Shift+Z)"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 7v6h-6"/><path d="M21 13a9 9 0 0 0-15.36-6.36L3 9"/></svg>
         </button>
 
         <div className="w-px h-5 bg-gray-600 mx-1" />

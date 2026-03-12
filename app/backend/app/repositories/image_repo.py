@@ -1,4 +1,4 @@
-from sqlalchemy import select, func
+from sqlalchemy import select, func, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..models.image import ImageRecord
@@ -52,3 +52,27 @@ async def create(db: AsyncSession, **kwargs) -> ImageRecord:
 
 async def bulk_flush(db: AsyncSession):
     await db.commit()
+
+
+async def update_status(db: AsyncSession, image_id: int, status: str) -> ImageRecord | None:
+    image = await db.get(ImageRecord, image_id)
+    if not image:
+        return None
+    image.status = status
+    await db.commit()
+    await db.refresh(image)
+    return image
+
+
+async def batch_update_status(db: AsyncSession, image_ids: list[int], status: str) -> int:
+    stmt = update(ImageRecord).where(ImageRecord.id.in_(image_ids)).values(status=status)
+    result = await db.execute(stmt)
+    await db.commit()
+    return result.rowcount
+
+
+async def batch_update_schema(db: AsyncSession, image_ids: list[int], schema_name: str) -> int:
+    stmt = update(ImageRecord).where(ImageRecord.id.in_(image_ids)).values(assigned_schema=schema_name)
+    result = await db.execute(stmt)
+    await db.commit()
+    return result.rowcount

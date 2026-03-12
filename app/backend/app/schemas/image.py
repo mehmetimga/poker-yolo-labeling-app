@@ -27,3 +27,28 @@ class ImageImportResult(BaseModel):
     imported: int
     skipped: int
     errors: list[str]
+
+
+VALID_STATUSES = {"new", "in_progress", "labeled", "reviewed", "approved", "rejected"}
+
+
+class ImageStatusUpdate(BaseModel):
+    status: str
+
+    @classmethod
+    def validate_status(cls, v: str) -> str:
+        if v not in VALID_STATUSES:
+            raise ValueError(f"Invalid status: {v}. Must be one of {VALID_STATUSES}")
+        return v
+
+    model_config = {"validate_default": True}
+
+
+class BatchStatusUpdate(BaseModel):
+    image_ids: list[int]
+    status: str
+
+
+class BatchSchemaAssign(BaseModel):
+    image_ids: list[int]
+    schema_name: str

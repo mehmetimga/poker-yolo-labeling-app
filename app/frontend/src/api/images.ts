@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "./client";
 import type { ImageRecord } from "@/types";
 
@@ -34,4 +34,59 @@ export function useImage(imageId: number | null) {
 
 export function getImageFileUrl(imageId: number): string {
   return `/api/images/${imageId}/file`;
+}
+
+export function useUpdateImageStatus(imageId: number) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (status: string) => {
+      const { data } = await api.patch(`/images/${imageId}/status`, { status });
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["images"] });
+      queryClient.invalidateQueries({ queryKey: ["image", imageId] });
+    },
+  });
+}
+
+export function useBatchUpdateStatus(projectId: number) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (body: { image_ids: number[]; status: string }) => {
+      const { data } = await api.patch(
+        `/projects/${projectId}/images/batch-status`,
+        body
+      );
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["images"] });
+    },
+  });
+}
+
+export function useBatchAssignSchema(projectId: number) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (body: { image_ids: number[]; schema_name: string }) => {
+      const { data } = await api.post(
+        `/projects/${projectId}/images/batch-schema`,
+        body
+      );
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["images"] });
+    },
+  });
+}
+
+export function useRunInference(imageId: number) {
+  return useMutation({
+    mutationFn: async () => {
+      const { data } = await api.post(`/images/${imageId}/infer`);
+      return data;
+    },
+  });
 }

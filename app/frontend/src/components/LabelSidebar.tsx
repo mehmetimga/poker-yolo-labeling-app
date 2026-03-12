@@ -3,7 +3,7 @@ import { useAnnotationStore } from "@/stores/annotationStore";
 import { useTaxonomy, useScoreSchemas, useAssignSchema } from "@/api/schemas";
 import { useSaveAnnotations, useAutosaveAnnotations } from "@/api/annotations";
 import { useExportYolo, useExportMetadata } from "@/api/export";
-import { useImages } from "@/api/images";
+import { useImages, useUpdateImageStatus, useRunInference } from "@/api/images";
 import { useProjectStore } from "@/stores/projectStore";
 import api from "@/api/client";
 import LabelDropdown from "./LabelDropdown";
@@ -29,6 +29,8 @@ export default function LabelSidebar({ imageId, projectId }: Props) {
     addAnnotation,
     removeAnnotation,
     selectedAnnotationId,
+    undo,
+    redo,
   } = useAnnotationStore();
   const { setSelectedImageId } = useProjectStore();
   const { data: images } = useImages(projectId);
@@ -40,6 +42,8 @@ export default function LabelSidebar({ imageId, projectId }: Props) {
   const assignSchema = useAssignSchema(imageId);
   const exportYolo = useExportYolo(projectId);
   const exportMetadata = useExportMetadata(projectId);
+  const updateStatus = useUpdateImageStatus(imageId);
+  const runInference = useRunInference(imageId);
 
   const schemaResults = useRef<SchemaScoreResponse | null>(null);
 
@@ -118,6 +122,49 @@ export default function LabelSidebar({ imageId, projectId }: Props) {
     }
   }, [images, imageId, addAnnotation]);
 
+  // Mark done and go to next image
+  const markDoneAndNext = useCallback(async () => {
+    if (hasUnsavedChanges) {
+      await saveAnnotations.mutateAsync(toApiFormat());
+      setHasUnsavedChanges(false);
+    }
+    await updateStatus.mutateAsync("labeled");
+    if (!images) return;
+    const idx = images.findIndex((img) => img.id === imageId);
+    if (idx >= 0 && idx + 1 < images.length) {
+      setSelectedImageId(images[idx + 1].id);
+    }
+  }, [hasUnsavedChanges, saveAnnotations, toApiFormat, setHasUnsavedChanges, updateStatus, images, imageId, setSelectedImageId]);
+
+  // Run model inference
+  const handleRunInference = useCallback(async () => {
+    try {
+      const data = await runInference.mutateAsync();
+      if (!data || data.length === 0) {
+        setCopyStatus("No detections found");
+        setTimeout(() => setCopyStatus(null), 2000);
+        return;
+      }
+      for (const ann of data) {
+        addAnnotation({
+          tempId: crypto.randomUUID(),
+          label: ann.label,
+          x_min: ann.x_min,
+          y_min: ann.y_min,
+          x_max: ann.x_max,
+          y_max: ann.y_max,
+          source: "model",
+          confidence: ann.confidence,
+        });
+      }
+      setCopyStatus(`Detected ${data.length} objects`);
+      setTimeout(() => setCopyStatus(null), 2000);
+    } catch {
+      setCopyStatus("Model not available");
+      setTimeout(() => setCopyStatus(null), 2000);
+    }
+  }, [runInference, addAnnotation]);
+
   // Score schemas on load
   useEffect(() => {
     if (annotations.length > 0) {
@@ -165,7 +212,11 @@ export default function LabelSidebar({ imageId, projectId }: Props) {
 
       switch (e.key.toLowerCase()) {
         case "n":
-          navigateImage("next");
+          if (e.shiftKey) {
+            markDoneAndNext();
+          } else {
+            navigateImage("next");
+          }
           break;
         case "p":
           navigateImage("prev");
@@ -185,6 +236,22 @@ export default function LabelSidebar({ imageId, projectId }: Props) {
         case "backspace":
           if (selectedAnnotationId) {
             removeAnnotation(selectedAnnotationId);
+          }
+          break;
+        case "z":
+          if (e.metaKey || e.ctrlKey) {
+            e.preventDefault();
+            if (e.shiftKey) {
+              redo();
+            } else {
+              undo();
+            }
+          }
+          break;
+        case "y":
+          if (e.metaKey || e.ctrlKey) {
+            e.preventDefault();
+            redo();
           }
           break;
         case "s":
@@ -210,10 +277,13 @@ export default function LabelSidebar({ imageId, projectId }: Props) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [
     navigateImage,
+    markDoneAndNext,
     copyFromPrevious,
     setActiveTool,
     selectedAnnotationId,
     removeAnnotation,
+    undo,
+    redo,
     handleSave,
     taxonomy,
     setActiveLabel,
@@ -253,13 +323,23 @@ export default function LabelSidebar({ imageId, projectId }: Props) {
             <h4 className="text-xs font-semibold text-gray-400 uppercase">
               Annotations ({annotations.length})
             </h4>
-            <button
-              onClick={copyFromPrevious}
-              className="text-xs bg-gray-700 hover:bg-gray-600 px-2 py-0.5 rounded"
-              title="Copy annotations from previous image (C)"
-            >
-              Copy Prev (C)
-            </button>
+            <div className="flex gap-1">
+              <button
+                onClick={copyFromPrevious}
+                className="text-xs bg-gray-700 hover:bg-gray-600 px-2 py-0.5 rounded"
+                title="Copy annotations from previous image (C)"
+              >
+                Copy Prev
+              </button>
+              <button
+                onClick={handleRunInference}
+                disabled={runInference.isPending}
+                className="text-xs bg-purple-700 hover:bg-purple-600 disabled:opacity-50 px-2 py-0.5 rounded"
+                title="Run YOLO model inference"
+              >
+                {runInference.isPending ? "..." : "Run Model"}
+              </button>
+            </div>
           </div>
           {copyStatus && (
             <div className="text-xs text-blue-400 mb-1">{copyStatus}</div>
@@ -290,6 +370,23 @@ export default function LabelSidebar({ imageId, projectId }: Props) {
           {hasUnsavedChanges && (
             <span className="text-yellow-500 text-xs">Unsaved</span>
           )}
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={markDoneAndNext}
+            disabled={updateStatus.isPending}
+            className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 px-2 py-1 rounded text-xs font-medium"
+            title="Save, mark as done, go to next (Shift+N)"
+          >
+            Done & Next (Shift+N)
+          </button>
+          <button
+            onClick={() => navigateImage("next")}
+            className="bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded text-xs"
+            title="Skip to next image (N)"
+          >
+            Skip
+          </button>
         </div>
         <div className="flex gap-2">
           <button

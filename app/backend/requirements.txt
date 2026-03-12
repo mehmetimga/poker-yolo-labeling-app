@@ -9,3 +9,5 @@ Pillow==10.4.0
 pytest==8.3.3
 pytest-asyncio==0.24.0
 greenlet>=3.0.0
+# Optional: install for YOLO model inference (set LABELING_YOLO_MODEL_PATH to enable)
+# ultralytics

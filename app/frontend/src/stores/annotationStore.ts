@@ -7,6 +7,8 @@ interface LocalAnnotation extends AnnotationCreate {
   tempId: string;
 }
 
+const MAX_UNDO = 50;
+
 interface AnnotationStore {
   annotations: LocalAnnotation[];
   selectedAnnotationId: string | null;
@@ -15,6 +17,8 @@ interface AnnotationStore {
   hasUnsavedChanges: boolean;
   zoom: number;
   panOffset: { x: number; y: number };
+  undoStack: LocalAnnotation[][];
+  redoStack: LocalAnnotation[][];
 
   setAnnotations: (anns: LocalAnnotation[]) => void;
   addAnnotation: (ann: LocalAnnotation) => void;
@@ -26,6 +30,8 @@ interface AnnotationStore {
   setHasUnsavedChanges: (val: boolean) => void;
   setZoom: (zoom: number) => void;
   setPanOffset: (offset: { x: number; y: number }) => void;
+  undo: () => void;
+  redo: () => void;
   reset: () => void;
 }
 
@@ -37,24 +43,35 @@ export const useAnnotationStore = create<AnnotationStore>((set) => ({
   hasUnsavedChanges: false,
   zoom: 1,
   panOffset: { x: 0, y: 0 },
+  undoStack: [],
+  redoStack: [],
 
   setAnnotations: (annotations) =>
-    set({ annotations, hasUnsavedChanges: false }),
+    set({ annotations, hasUnsavedChanges: false, undoStack: [], redoStack: [] }),
+
   addAnnotation: (ann) =>
     set((state) => ({
+      undoStack: [...state.undoStack.slice(-(MAX_UNDO - 1)), state.annotations],
+      redoStack: [],
       annotations: [...state.annotations, ann],
       hasUnsavedChanges: true,
       selectedAnnotationId: ann.tempId,
     })),
+
   updateAnnotation: (tempId, updates) =>
     set((state) => ({
+      undoStack: [...state.undoStack.slice(-(MAX_UNDO - 1)), state.annotations],
+      redoStack: [],
       annotations: state.annotations.map((a) =>
         a.tempId === tempId ? { ...a, ...updates } : a
       ),
       hasUnsavedChanges: true,
     })),
+
   removeAnnotation: (tempId) =>
     set((state) => ({
+      undoStack: [...state.undoStack.slice(-(MAX_UNDO - 1)), state.annotations],
+      redoStack: [],
       annotations: state.annotations.filter((a) => a.tempId !== tempId),
       selectedAnnotationId:
         state.selectedAnnotationId === tempId
@@ -62,6 +79,33 @@ export const useAnnotationStore = create<AnnotationStore>((set) => ({
           : state.selectedAnnotationId,
       hasUnsavedChanges: true,
     })),
+
+  undo: () =>
+    set((state) => {
+      if (state.undoStack.length === 0) return state;
+      const prev = state.undoStack[state.undoStack.length - 1];
+      return {
+        undoStack: state.undoStack.slice(0, -1),
+        redoStack: [...state.redoStack, state.annotations],
+        annotations: prev,
+        selectedAnnotationId: null,
+        hasUnsavedChanges: true,
+      };
+    }),
+
+  redo: () =>
+    set((state) => {
+      if (state.redoStack.length === 0) return state;
+      const next = state.redoStack[state.redoStack.length - 1];
+      return {
+        redoStack: state.redoStack.slice(0, -1),
+        undoStack: [...state.undoStack, state.annotations],
+        annotations: next,
+        selectedAnnotationId: null,
+        hasUnsavedChanges: true,
+      };
+    }),
+
   setSelectedAnnotationId: (id) => set({ selectedAnnotationId: id }),
   setActiveTool: (tool) => set({ activeTool: tool }),
   setActiveLabel: (label) => set({ activeLabel: label }),
@@ -76,5 +120,7 @@ export const useAnnotationStore = create<AnnotationStore>((set) => ({
       hasUnsavedChanges: false,
       zoom: 1,
       panOffset: { x: 0, y: 0 },
+      undoStack: [],
+      redoStack: [],
     }),
 }));

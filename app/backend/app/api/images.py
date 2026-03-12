@@ -7,7 +7,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..config import settings
 from ..database import get_db
 from ..repositories import image_repo
-from ..schemas.image import ImageOut
+from ..schemas.image import ImageOut, ImageStatusUpdate, BatchStatusUpdate, BatchSchemaAssign
+from ..schemas.annotation import AnnotationCreate
+from ..services import inference_service
 
 router = APIRouter()
 
@@ -55,3 +57,58 @@ async def get_image_file(image_id: int, db: AsyncSession = Depends(get_db)):
     suffix = filepath.suffix.lower()
     media_types = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp"}
     return FileResponse(filepath, media_type=media_types.get(suffix, "image/png"))
+
+
+@router.patch("/images/{image_id}/status", response_model=ImageOut)
+async def update_image_status(
+    image_id: int,
+    body: ImageStatusUpdate,
+    db: AsyncSession = Depends(get_db),
+):
+    image = await image_repo.update_status(db, image_id, body.status)
+    if not image:
+        raise HTTPException(status_code=404, detail="Image not found")
+    return ImageOut.model_validate(image)
+
+
+@router.patch("/projects/{project_id}/images/batch-status")
+async def batch_update_status(
+    project_id: int,
+    body: BatchStatusUpdate,
+    db: AsyncSession = Depends(get_db),
+):
+    count = await image_repo.batch_update_status(db, body.image_ids, body.status)
+    return {"updated": count}
+
+
+@router.post("/projects/{project_id}/images/batch-schema")
+async def batch_assign_schema(
+    project_id: int,
+    body: BatchSchemaAssign,
+    db: AsyncSession = Depends(get_db),
+):
+    count = await image_repo.batch_update_schema(db, body.image_ids, body.schema_name)
+    return {"updated": count}
+
+
+@router.post("/images/{image_id}/infer", response_model=list[AnnotationCreate])
+async def run_inference(image_id: int, db: AsyncSession = Depends(get_db)):
+    if not settings.yolo_model_path:
+        raise HTTPException(status_code=404, detail="No YOLO model configured. Set LABELING_YOLO_MODEL_PATH.")
+    image = await image_repo.get_by_id(db, image_id)
+    if not image:
+        raise HTTPException(status_code=404, detail="Image not found")
+    filepath = Path(image.filepath)
+    if not filepath.is_file():
+        filepath = settings.images_dir / image.filepath
+    if not filepath.is_file():
+        raise HTTPException(status_code=404, detail="Image file not found on disk")
+    try:
+        detections = inference_service.run_inference(
+            str(filepath), settings.yolo_model_path, settings.yolo_confidence_threshold
+        )
+    except RuntimeError as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    return detections
