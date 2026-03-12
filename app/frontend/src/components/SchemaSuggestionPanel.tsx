@@ -1,6 +1,4 @@
-import { useState } from "react";
 import { useAnnotationStore } from "@/stores/annotationStore";
-import { useSchemaDefinitions, useSchemaTemplate } from "@/api/schemas";
 import type { SchemaScoreResponse } from "@/types";
 
 interface Props {
@@ -15,74 +13,12 @@ export default function SchemaSuggestionPanel({
   assignedSchema,
   onAssign,
 }: Props) {
-  const { setActiveLabel, setActiveTool, addAnnotation } = useAnnotationStore();
-  const { data: schemaConfig } = useSchemaDefinitions();
-  const applyTemplate = useSchemaTemplate();
-  const [templateStatus, setTemplateStatus] = useState<string | null>(null);
+  const { setActiveLabel, setActiveTool } = useAnnotationStore();
 
-  const handleApplyTemplate = async (schemaName: string) => {
-    try {
-      const annotations = await applyTemplate.mutateAsync(schemaName);
-      if (!annotations || annotations.length === 0) {
-        setTemplateStatus("No template found");
-        setTimeout(() => setTemplateStatus(null), 2000);
-        return;
-      }
-      for (const ann of annotations) {
-        addAnnotation({
-          tempId: crypto.randomUUID(),
-          label: ann.label,
-          x_min: ann.x_min,
-          y_min: ann.y_min,
-          x_max: ann.x_max,
-          y_max: ann.y_max,
-          source: "copied",
-          confidence: null,
-        });
-      }
-      // Also assign the schema
-      onAssign(schemaName);
-      setTemplateStatus(`Applied ${annotations.length} boxes`);
-      setTimeout(() => setTemplateStatus(null), 2000);
-    } catch {
-      setTemplateStatus("No template yet — label one image first");
-      setTimeout(() => setTemplateStatus(null), 3000);
-    }
-  };
-
-  const schemas = schemaConfig?.schemas || [];
   const top5 = schemaResults?.top_matches?.slice(0, 5) || [];
 
   return (
     <div>
-      {/* Apply Template section — always visible */}
-      <h4 className="text-xs font-semibold text-gray-400 uppercase mb-2">
-        Apply Template
-      </h4>
-      <p className="text-xs text-gray-600 mb-2">
-        Pick a schema to auto-fill boxes from a previously labeled image.
-      </p>
-      <div className="flex flex-wrap gap-1 mb-3">
-        {schemas.map((s: { name: string }) => (
-          <button
-            key={s.name}
-            onClick={() => handleApplyTemplate(s.name)}
-            disabled={applyTemplate.isPending}
-            className={`text-xs px-2 py-1 rounded ${
-              assignedSchema === s.name
-                ? "bg-green-700 text-green-200"
-                : "bg-gray-700 hover:bg-gray-600 text-gray-300"
-            }`}
-            title={`Apply template: ${s.name.replace(/_/g, " ")}`}
-          >
-            {s.name.replace(/_/g, " ")}
-          </button>
-        ))}
-      </div>
-      {templateStatus && (
-        <div className="text-xs text-blue-400 mb-2">{templateStatus}</div>
-      )}
-
       {assignedSchema && (
         <div className="text-xs text-green-400 mb-2 flex items-center gap-1">
           <span>Assigned:</span>
@@ -93,7 +29,7 @@ export default function SchemaSuggestionPanel({
       {/* Schema Suggestions — after saving */}
       {top5.length > 0 && (
         <>
-          <h4 className="text-xs font-semibold text-gray-400 uppercase mb-2 mt-3">
+          <h4 className="text-xs font-semibold text-gray-400 uppercase mb-2">
             Schema Suggestions
           </h4>
           <div className="space-y-2">
@@ -107,14 +43,6 @@ export default function SchemaSuggestionPanel({
                     {match.schema.replace(/_/g, " ")}
                   </span>
                   <div className="flex gap-1">
-                    <button
-                      onClick={() => handleApplyTemplate(match.schema)}
-                      disabled={applyTemplate.isPending}
-                      className="text-xs bg-purple-600 hover:bg-purple-700 disabled:opacity-50 px-2 py-0.5 rounded"
-                      title="Apply boxes from template"
-                    >
-                      Apply
-                    </button>
                     {assignedSchema === match.schema ? (
                       <span className="text-xs text-green-400 px-2 py-0.5">Assigned</span>
                     ) : (

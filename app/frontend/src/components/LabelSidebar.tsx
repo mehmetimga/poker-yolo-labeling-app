@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useAnnotationStore } from "@/stores/annotationStore";
-import { useTaxonomy, useScoreSchemas, useAssignSchema } from "@/api/schemas";
+import { useTaxonomy, useScoreSchemas, useAssignSchema, useSchemaDefinitions, useSchemaTemplate } from "@/api/schemas";
 import { useSaveAnnotations, useAutosaveAnnotations } from "@/api/annotations";
 import { useExportYolo, useExportMetadata } from "@/api/export";
 import { useImages, useImage, useUpdateImageStatus, useRunInference } from "@/api/images";
@@ -27,6 +27,7 @@ export default function LabelSidebar({ imageId, projectId }: Props) {
     hasUnsavedChanges,
     setHasUnsavedChanges,
     addAnnotation,
+    setAnnotations,
     removeAnnotation,
     selectedAnnotationId,
     undo,
@@ -36,7 +37,10 @@ export default function LabelSidebar({ imageId, projectId }: Props) {
   const { data: images } = useImages(projectId);
   const { data: currentImage } = useImage(imageId);
   const [copyStatus, setCopyStatus] = useState<string | null>(null);
+  const [showTemplateDropdown, setShowTemplateDropdown] = useState(false);
 
+  const { data: schemaConfig } = useSchemaDefinitions();
+  const applyTemplate = useSchemaTemplate();
   const saveAnnotations = useSaveAnnotations(imageId);
   const autosave = useAutosaveAnnotations(imageId);
   const scoreSchemas = useScoreSchemas();
@@ -47,6 +51,7 @@ export default function LabelSidebar({ imageId, projectId }: Props) {
   const runInference = useRunInference(imageId);
 
   const schemaResults = useRef<SchemaScoreResponse | null>(null);
+  const templateDropdownRef = useRef<HTMLDivElement>(null);
 
   // Convert local annotations to API format
   const toApiFormat = useCallback((): AnnotationCreate[] => {
@@ -123,6 +128,39 @@ export default function LabelSidebar({ imageId, projectId }: Props) {
     }
   }, [images, imageId, addAnnotation]);
 
+  // Copy annotations from a schema template
+  const copyFromTemplate = useCallback(async (schemaName: string) => {
+    setShowTemplateDropdown(false);
+    try {
+      const data = await applyTemplate.mutateAsync(schemaName);
+      if (!data || data.length === 0) {
+        setCopyStatus("No template found");
+        setTimeout(() => setCopyStatus(null), 2000);
+        return;
+      }
+      // Replace all current annotations with template
+      const newAnnotations = data.map((ann) => ({
+        tempId: crypto.randomUUID(),
+        label: ann.label,
+        x_min: ann.x_min,
+        y_min: ann.y_min,
+        x_max: ann.x_max,
+        y_max: ann.y_max,
+        source: "copied" as const,
+        confidence: null,
+      }));
+      setAnnotations(newAnnotations);
+      useAnnotationStore.getState().setHasUnsavedChanges(true);
+      // Also assign the schema
+      assignSchema.mutate(schemaName);
+      setCopyStatus(`Replaced with ${data.length} boxes from "${schemaName.replace(/_/g, " ")}"`);
+      setTimeout(() => setCopyStatus(null), 2000);
+    } catch {
+      setCopyStatus("No template yet — label one image first");
+      setTimeout(() => setCopyStatus(null), 3000);
+    }
+  }, [applyTemplate, setAnnotations, assignSchema]);
+
   // Mark done and go to next image
   const markDoneAndNext = useCallback(async () => {
     if (hasUnsavedChanges) {
@@ -165,6 +203,18 @@ export default function LabelSidebar({ imageId, projectId }: Props) {
       setTimeout(() => setCopyStatus(null), 2000);
     }
   }, [runInference, addAnnotation]);
+
+  // Close template dropdown on outside click
+  useEffect(() => {
+    if (!showTemplateDropdown) return;
+    const handleClick = (e: MouseEvent) => {
+      if (templateDropdownRef.current && !templateDropdownRef.current.contains(e.target as Node)) {
+        setShowTemplateDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [showTemplateDropdown]);
 
   // Score schemas on load
   useEffect(() => {
@@ -332,6 +382,33 @@ export default function LabelSidebar({ imageId, projectId }: Props) {
               >
                 Copy Prev
               </button>
+              <div className="relative" ref={templateDropdownRef}>
+                <button
+                  onClick={() => setShowTemplateDropdown(!showTemplateDropdown)}
+                  disabled={applyTemplate.isPending}
+                  className="text-xs bg-indigo-700 hover:bg-indigo-600 disabled:opacity-50 px-2 py-0.5 rounded"
+                  title="Copy boxes from a saved template"
+                >
+                  {applyTemplate.isPending ? "..." : "Copy Template ▾"}
+                </button>
+                {showTemplateDropdown && (
+                  <div className="absolute right-0 top-full mt-1 z-50 bg-gray-800 border border-gray-600 rounded shadow-lg min-w-[160px]">
+                    {(schemaConfig?.schemas || []).length === 0 ? (
+                      <div className="text-xs text-gray-500 px-3 py-2">No schemas defined</div>
+                    ) : (
+                      (schemaConfig?.schemas || []).map((s: { name: string }) => (
+                        <button
+                          key={s.name}
+                          onClick={() => copyFromTemplate(s.name)}
+                          className="block w-full text-left text-xs px-3 py-1.5 hover:bg-gray-700 text-gray-300"
+                        >
+                          {s.name.replace(/_/g, " ")}
+                        </button>
+                      ))
+                    )}
+                  </div>
+                )}
+              </div>
               <button
                 onClick={handleRunInference}
                 disabled={runInference.isPending}
