@@ -1,14 +1,15 @@
-import { useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useAnnotationStore } from "@/stores/annotationStore";
 import { useTaxonomy, useScoreSchemas, useAssignSchema } from "@/api/schemas";
 import { useSaveAnnotations, useAutosaveAnnotations } from "@/api/annotations";
 import { useExportYolo, useExportMetadata } from "@/api/export";
 import { useImages } from "@/api/images";
 import { useProjectStore } from "@/stores/projectStore";
+import api from "@/api/client";
 import LabelDropdown from "./LabelDropdown";
 import AnnotationList from "./AnnotationList";
 import SchemaSuggestionPanel from "./SchemaSuggestionPanel";
-import type { AnnotationCreate, SchemaScoreResponse } from "@/types";
+import type { Annotation, AnnotationCreate, SchemaScoreResponse } from "@/types";
 
 interface Props {
   imageId: number;
@@ -25,11 +26,13 @@ export default function LabelSidebar({ imageId, projectId }: Props) {
     setActiveLabel,
     hasUnsavedChanges,
     setHasUnsavedChanges,
+    addAnnotation,
     removeAnnotation,
     selectedAnnotationId,
   } = useAnnotationStore();
   const { setSelectedImageId } = useProjectStore();
   const { data: images } = useImages(projectId);
+  const [copyStatus, setCopyStatus] = useState<string | null>(null);
 
   const saveAnnotations = useSaveAnnotations(imageId);
   const autosave = useAutosaveAnnotations(imageId);
@@ -78,6 +81,43 @@ export default function LabelSidebar({ imageId, projectId }: Props) {
     return () => clearTimeout(timer);
   }, [annotations, hasUnsavedChanges, toApiFormat, autosave]);
 
+  // Copy annotations from previous image
+  const copyFromPrevious = useCallback(async () => {
+    if (!images) return;
+    const idx = images.findIndex((img) => img.id === imageId);
+    if (idx <= 0) {
+      setCopyStatus("No previous image");
+      setTimeout(() => setCopyStatus(null), 2000);
+      return;
+    }
+    const prevId = images[idx - 1].id;
+    try {
+      const { data } = await api.get<Annotation[]>(`/images/${prevId}/annotations`);
+      if (data.length === 0) {
+        setCopyStatus("Previous image has no annotations");
+        setTimeout(() => setCopyStatus(null), 2000);
+        return;
+      }
+      for (const ann of data) {
+        addAnnotation({
+          tempId: crypto.randomUUID(),
+          label: ann.label,
+          x_min: ann.x_min,
+          y_min: ann.y_min,
+          x_max: ann.x_max,
+          y_max: ann.y_max,
+          source: "copied",
+          confidence: ann.confidence,
+        });
+      }
+      setCopyStatus(`Copied ${data.length} annotations`);
+      setTimeout(() => setCopyStatus(null), 2000);
+    } catch {
+      setCopyStatus("Failed to copy");
+      setTimeout(() => setCopyStatus(null), 2000);
+    }
+  }, [images, imageId, addAnnotation]);
+
   // Score schemas on load
   useEffect(() => {
     if (annotations.length > 0) {
@@ -87,10 +127,24 @@ export default function LabelSidebar({ imageId, projectId }: Props) {
     }
   }, [imageId]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Warn on browser close/refresh with unsaved changes
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+      }
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [hasUnsavedChanges]);
+
   // Navigation helpers
   const navigateImage = useCallback(
     (direction: "next" | "prev") => {
       if (!images) return;
+      if (hasUnsavedChanges && !confirm("You have unsaved changes. Discard and continue?")) {
+        return;
+      }
       const idx = images.findIndex((img) => img.id === imageId);
       if (idx < 0) return;
       const newIdx = direction === "next" ? idx + 1 : idx - 1;
@@ -98,7 +152,7 @@ export default function LabelSidebar({ imageId, projectId }: Props) {
         setSelectedImageId(images[newIdx].id);
       }
     },
-    [images, imageId, setSelectedImageId]
+    [images, imageId, setSelectedImageId, hasUnsavedChanges]
   );
 
   // Keyboard shortcuts
@@ -115,6 +169,11 @@ export default function LabelSidebar({ imageId, projectId }: Props) {
           break;
         case "p":
           navigateImage("prev");
+          break;
+        case "c":
+          if (!e.metaKey && !e.ctrlKey) {
+            copyFromPrevious();
+          }
           break;
         case "b":
           setActiveTool("draw");
@@ -151,6 +210,7 @@ export default function LabelSidebar({ imageId, projectId }: Props) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [
     navigateImage,
+    copyFromPrevious,
     setActiveTool,
     selectedAnnotationId,
     removeAnnotation,
@@ -189,9 +249,21 @@ export default function LabelSidebar({ imageId, projectId }: Props) {
       {/* Annotation list */}
       <div className="flex-1 overflow-y-auto">
         <div className="p-3">
-          <h4 className="text-xs font-semibold text-gray-400 uppercase mb-2">
-            Annotations ({annotations.length})
-          </h4>
+          <div className="flex items-center justify-between mb-2">
+            <h4 className="text-xs font-semibold text-gray-400 uppercase">
+              Annotations ({annotations.length})
+            </h4>
+            <button
+              onClick={copyFromPrevious}
+              className="text-xs bg-gray-700 hover:bg-gray-600 px-2 py-0.5 rounded"
+              title="Copy annotations from previous image (C)"
+            >
+              Copy Prev (C)
+            </button>
+          </div>
+          {copyStatus && (
+            <div className="text-xs text-blue-400 mb-1">{copyStatus}</div>
+          )}
           <AnnotationList />
         </div>
 

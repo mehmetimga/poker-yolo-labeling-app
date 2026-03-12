@@ -1,3 +1,4 @@
+import { useAnnotationStore } from "@/stores/annotationStore";
 import type { SchemaScoreResponse } from "@/types";
 
 interface Props {
@@ -10,6 +11,7 @@ export default function SchemaSuggestionPanel({
   schemaResults,
   onAssign,
 }: Props) {
+  const { setActiveLabel, setActiveTool } = useAnnotationStore();
   if (!schemaResults || schemaResults.top_matches.length === 0) {
     return (
       <div>
@@ -58,8 +60,21 @@ export default function SchemaSuggestionPanel({
               Score: {(match.score * 100).toFixed(0)}%
             </div>
             {match.missing.length > 0 && (
-              <div className="text-xs text-yellow-500 mt-1">
-                Missing: {match.missing.join(", ")}
+              <div className="text-xs text-yellow-500 mt-1 flex flex-wrap items-center gap-1">
+                <span>Missing:</span>
+                {match.missing.map((label) => (
+                  <button
+                    key={label}
+                    onClick={() => {
+                      setActiveLabel(label);
+                      setActiveTool("draw");
+                    }}
+                    className="bg-yellow-900/40 hover:bg-yellow-700/50 text-yellow-400 px-1.5 py-0 rounded cursor-pointer"
+                    title={`Draw ${label}`}
+                  >
+                    {label}
+                  </button>
+                ))}
               </div>
             )}
             {match.conflicts.length > 0 && (
