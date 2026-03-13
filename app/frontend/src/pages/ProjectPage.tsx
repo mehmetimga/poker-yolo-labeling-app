@@ -108,6 +108,12 @@ export default function ProjectPage() {
           >
             {importImages.isPending ? "Importing..." : "Import from Folder"}
           </button>
+          <button
+            onClick={() => navigate(`/projects/${pid}/training`)}
+            className="bg-purple-600 hover:bg-purple-700 px-3 py-1 rounded text-sm"
+          >
+            Training
+          </button>
         </div>
       </div>
 

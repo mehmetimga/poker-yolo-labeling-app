@@ -107,3 +107,63 @@ export interface SchemaMatch {
 export interface SchemaScoreResponse {
   top_matches: SchemaMatch[];
 }
+
+// ─── Training Types ─────────────────────────────────────────────
+
+export interface TrainingRun {
+  id: number;
+  project_id: number;
+  name: string;
+  status: string; // pending|preparing|training|evaluating|done|failed
+  model_path: string | null;
+  base_model: string;
+  epochs: number;
+  batch_size: number;
+  img_size: number;
+  learning_rate: number;
+  train_count: number;
+  val_count: number;
+  test_count: number;
+  split_ratio: string;
+  metrics: TrainingMetrics | null;
+  evaluation: EvaluationResult | null;
+  error_message: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TrainingMetrics {
+  [key: string]: number;
+}
+
+export interface PerClassMetrics {
+  ap50: number;
+  ap50_95: number | null;
+}
+
+export interface ErrorMiningEntry {
+  image_id: number;
+  filename: string;
+  split: string;
+  divergence: number;
+  gt_count: number;
+  pred_count: number;
+  missing: { label: string; gt: number; pred: number }[];
+  extra: { label: string; gt: number; pred: number }[];
+}
+
+export interface EvaluationResult {
+  mAP50: number | null;
+  mAP50_95: number | null;
+  precision: number | null;
+  recall: number | null;
+  per_class: Record<string, PerClassMetrics>;
+  error_mining?: ErrorMiningEntry[];
+}
+
+export interface TrainingLiveStatus {
+  run_id: number;
+  db_status: string;
+  live_status: string;
+  progress: string | null;
+}
