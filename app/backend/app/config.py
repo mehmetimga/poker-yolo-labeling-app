@@ -12,6 +12,14 @@ class Settings(BaseSettings):
     yolo_model_path: str | None = None
     yolo_confidence_threshold: float = 0.25
 
+    # Auth / JWT
+    jwt_secret_key: str = "change-me-in-production"
+    jwt_algorithm: str = "HS256"
+    jwt_access_token_expire_minutes: int = 480  # 8 hours
+    default_admin_username: str = "admin"
+    default_admin_password: str = "admin"
+    default_admin_email: str = "admin@localhost"
+
     model_config = {"env_prefix": "LABELING_"}
 
     def resolve_image_path(self, image_root_path: str) -> Path:

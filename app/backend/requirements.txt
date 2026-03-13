@@ -10,5 +10,8 @@ pytest==8.3.3
 pytest-asyncio==0.24.0
 greenlet>=3.0.0
 pyyaml>=6.0
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+bcrypt==4.2.1
 # Optional: install for YOLO model inference (set LABELING_YOLO_MODEL_PATH to enable)
 # ultralytics

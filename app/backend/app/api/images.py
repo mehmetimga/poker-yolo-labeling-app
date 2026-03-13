@@ -8,6 +8,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..config import settings
 from ..database import get_db
+from ..auth.dependencies import get_current_user, require_role
+from ..models.user import User
 from ..repositories import image_repo
 from ..schemas.image import ImageOut, ImageStatusUpdate, BatchStatusUpdate, BatchSchemaAssign
 from ..schemas.annotation import AnnotationCreate
@@ -15,6 +17,8 @@ from ..services import inference_service
 from ..services.batch_inference_service import create_task, run_batch_inference
 
 router = APIRouter()
+
+admin_only = require_role("admin")
 
 
 class BatchInferRequest(BaseModel):
@@ -30,6 +34,7 @@ async def list_images(
     sort: str = Query("filename"),
     limit: int = Query(500, le=2000),
     offset: int = Query(0, ge=0),
+    _: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     rows = await image_repo.get_by_project(
@@ -44,7 +49,7 @@ async def list_images(
 
 
 @router.get("/images/{image_id}", response_model=ImageOut)
-async def get_image(image_id: int, db: AsyncSession = Depends(get_db)):
+async def get_image(image_id: int, _: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     image = await image_repo.get_by_id(db, image_id)
     if not image:
         raise HTTPException(status_code=404, detail="Image not found")
@@ -53,7 +58,7 @@ async def get_image(image_id: int, db: AsyncSession = Depends(get_db)):
 
 
 @router.get("/images/{image_id}/file")
-async def get_image_file(image_id: int, db: AsyncSession = Depends(get_db)):
+async def get_image_file(image_id: int, _: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     image = await image_repo.get_by_id(db, image_id)
     if not image:
         raise HTTPException(status_code=404, detail="Image not found")
@@ -72,6 +77,7 @@ async def get_image_file(image_id: int, db: AsyncSession = Depends(get_db)):
 async def update_image_status(
     image_id: int,
     body: ImageStatusUpdate,
+    _: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     image = await image_repo.update_status(db, image_id, body.status)
@@ -84,6 +90,7 @@ async def update_image_status(
 async def batch_update_status(
     project_id: int,
     body: BatchStatusUpdate,
+    _: User = Depends(admin_only),
     db: AsyncSession = Depends(get_db),
 ):
     count = await image_repo.batch_update_status(db, body.image_ids, body.status)
@@ -94,6 +101,7 @@ async def batch_update_status(
 async def batch_assign_schema(
     project_id: int,
     body: BatchSchemaAssign,
+    _: User = Depends(admin_only),
     db: AsyncSession = Depends(get_db),
 ):
     count = await image_repo.batch_update_schema(db, body.image_ids, body.schema_name)
@@ -101,7 +109,7 @@ async def batch_assign_schema(
 
 
 @router.post("/images/{image_id}/infer", response_model=list[AnnotationCreate])
-async def run_inference(image_id: int, db: AsyncSession = Depends(get_db)):
+async def run_inference(image_id: int, _: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     if not settings.yolo_model_path:
         raise HTTPException(status_code=404, detail="No YOLO model configured. Set LABELING_YOLO_MODEL_PATH.")
     image = await image_repo.get_by_id(db, image_id)
@@ -127,6 +135,7 @@ async def run_inference(image_id: int, db: AsyncSession = Depends(get_db)):
 async def batch_infer(
     project_id: int,
     body: BatchInferRequest | None = None,
+    _: User = Depends(admin_only),
     db: AsyncSession = Depends(get_db),
 ):
     if not settings.yolo_model_path:

@@ -1,11 +1,14 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useProjects, useCreateProject } from "@/api/projects";
+import { useAuthStore } from "@/stores/authStore";
+import UserBadge from "@/components/UserBadge";
 
 export default function ProjectListPage() {
   const navigate = useNavigate();
   const { data: projects, isLoading } = useProjects();
   const createProject = useCreateProject();
+  const user = useAuthStore((s) => s.user);
 
   const [showForm, setShowForm] = useState(false);
   const [name, setName] = useState("");
@@ -30,12 +33,17 @@ export default function ProjectListPage() {
     <div className="max-w-4xl mx-auto p-8">
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold">Poker YOLO Labeling</h1>
-        <button
-          onClick={() => setShowForm(true)}
-          className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded font-medium"
-        >
-          New Project
-        </button>
+        <div className="flex items-center gap-4">
+          <UserBadge />
+          {user?.role === "admin" && (
+            <button
+              onClick={() => setShowForm(true)}
+              className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded font-medium"
+            >
+              New Project
+            </button>
+          )}
+        </div>
       </div>
 
       {showForm && (

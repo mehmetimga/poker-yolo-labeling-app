@@ -21,6 +21,10 @@ class ImageRecord(Base):
     suggested_schema: Mapped[str | None] = mapped_column(String(128), nullable=True)
     schema_confidence: Mapped[float | None] = mapped_column(Float, nullable=True)
     review_status: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    labeled_by: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    labeled_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    reviewed_by: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.utcnow, onupdate=datetime.utcnow

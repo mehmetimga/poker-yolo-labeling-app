@@ -3,6 +3,8 @@ from sqlalchemy import select, func, exists
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..database import get_db
+from ..auth.dependencies import get_current_user
+from ..models.user import User
 from ..config import load_schemas, load_taxonomy
 from ..models.image import ImageRecord
 from ..models.annotation import Annotation
@@ -15,18 +17,18 @@ router = APIRouter()
 
 
 @router.get("")
-async def list_schemas():
+async def list_schemas(_: User = Depends(get_current_user)):
     schemas_config = load_schemas()
     return schemas_config
 
 
 @router.get("/taxonomy")
-async def get_taxonomy():
+async def get_taxonomy(_: User = Depends(get_current_user)):
     return load_taxonomy()
 
 
 @router.post("/score", response_model=SchemaScoreResponse)
-async def score(body: SchemaScoreRequest, db: AsyncSession = Depends(get_db)):
+async def score(body: SchemaScoreRequest, _: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     try:
         results = await score_schemas(db, body.image_id)
         return SchemaScoreResponse(
@@ -38,7 +40,7 @@ async def score(body: SchemaScoreRequest, db: AsyncSession = Depends(get_db)):
 
 @router.put("/images/{image_id}/schema")
 async def assign_schema(
-    image_id: int, body: SchemaAssign, db: AsyncSession = Depends(get_db)
+    image_id: int, body: SchemaAssign, _: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
 ):
     image = await image_repo.get_by_id(db, image_id)
     if not image:
@@ -49,7 +51,7 @@ async def assign_schema(
 
 
 @router.get("/templates/{schema_name}", response_model=list[AnnotationOut])
-async def get_schema_template(schema_name: str, db: AsyncSession = Depends(get_db)):
+async def get_schema_template(schema_name: str, _: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     """Get annotations from the most recently labeled image with this schema as a template."""
     # Find the most recent image with this schema that has annotations
     stmt = (
@@ -72,7 +74,7 @@ async def get_schema_template(schema_name: str, db: AsyncSession = Depends(get_d
 
 
 @router.get("/templates-status")
-async def get_templates_status(db: AsyncSession = Depends(get_db)):
+async def get_templates_status(_: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     """Return which schemas have at least one labeled image with annotations (i.e. a usable template)."""
     # Subquery: images that have at least one annotation
     has_annotations = (

@@ -5,6 +5,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..config import settings
 from ..database import get_db
+from ..auth.dependencies import get_current_user, require_role
+from ..models.user import User
 from ..repositories import project_repo
 from ..schemas.project import ProjectCreate, ProjectOut
 from ..schemas.image import ImageImportResult
@@ -12,9 +14,11 @@ from ..services.image_service import import_images_from_folder, IMAGE_EXTENSIONS
 
 router = APIRouter()
 
+admin_only = require_role("admin")
+
 
 @router.get("", response_model=list[ProjectOut])
-async def list_projects(db: AsyncSession = Depends(get_db)):
+async def list_projects(_: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     rows = await project_repo.get_all(db)
     result = []
     for project, image_count in rows:
@@ -25,7 +29,7 @@ async def list_projects(db: AsyncSession = Depends(get_db)):
 
 
 @router.post("", response_model=ProjectOut, status_code=201)
-async def create_project(body: ProjectCreate, db: AsyncSession = Depends(get_db)):
+async def create_project(body: ProjectCreate, _: User = Depends(admin_only), db: AsyncSession = Depends(get_db)):
     # Auto-create the image directory
     image_dir = settings.resolve_image_path(body.image_root_path)
     image_dir.mkdir(parents=True, exist_ok=True)
@@ -39,7 +43,7 @@ async def create_project(body: ProjectCreate, db: AsyncSession = Depends(get_db)
 
 
 @router.get("/{project_id}", response_model=ProjectOut)
-async def get_project(project_id: int, db: AsyncSession = Depends(get_db)):
+async def get_project(project_id: int, _: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     project = await project_repo.get_by_id(db, project_id)
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
@@ -53,6 +57,7 @@ async def get_project(project_id: int, db: AsyncSession = Depends(get_db)):
 async def upload_images(
     project_id: int,
     files: List[UploadFile] = File(...),
+    _: User = Depends(admin_only),
     db: AsyncSession = Depends(get_db),
 ):
     """Upload image files, save to project's image directory, then import them."""
@@ -86,7 +91,7 @@ async def upload_images(
 
 
 @router.post("/{project_id}/import-images", response_model=ImageImportResult)
-async def import_images(project_id: int, db: AsyncSession = Depends(get_db)):
+async def import_images(project_id: int, _: User = Depends(admin_only), db: AsyncSession = Depends(get_db)):
     project = await project_repo.get_by_id(db, project_id)
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")

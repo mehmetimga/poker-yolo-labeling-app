@@ -1,8 +1,10 @@
-import { useRef, useState } from "react";
+import { Fragment, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useProject, useImportImages, useUploadImages } from "@/api/projects";
 import { useImages } from "@/api/images";
 import { useProjectStore } from "@/stores/projectStore";
+import { useAuthStore } from "@/stores/authStore";
+import UserBadge from "@/components/UserBadge";
 import ImageQueue from "@/components/ImageQueue";
 import AnnotationCanvas from "@/components/AnnotationCanvas";
 import LabelSidebar from "@/components/LabelSidebar";
@@ -18,6 +20,9 @@ export default function ProjectPage() {
   const importImages = useImportImages(pid || 0);
   const uploadImages = useUploadImages(pid || 0);
   const { selectedImageId, statusFilter, schemaFilter, sortOrder } = useProjectStore();
+  const { user } = useAuthStore();
+  const isAdmin = user?.role === "admin";
+  const isReviewerOrAdmin = user?.role === "admin" || user?.role === "reviewer";
   const { data: images } = useImages(pid, {
     status: statusFilter || undefined,
     schema: schemaFilter || undefined,
@@ -94,26 +99,57 @@ export default function ProjectPage() {
             onChange={handleUpload}
             className="hidden"
           />
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploadImages.isPending}
-            className="bg-green-600 hover:bg-green-700 disabled:opacity-50 px-3 py-1 rounded text-sm"
-          >
-            {uploadImages.isPending ? "Uploading..." : "Upload Images"}
-          </button>
-          <button
-            onClick={handleImport}
-            disabled={importImages.isPending}
-            className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 px-3 py-1 rounded text-sm"
-          >
-            {importImages.isPending ? "Importing..." : "Import from Folder"}
-          </button>
-          <button
-            onClick={() => navigate(`/projects/${pid}/training`)}
-            className="bg-purple-600 hover:bg-purple-700 px-3 py-1 rounded text-sm"
-          >
-            Training
-          </button>
+          {isAdmin && (
+            <Fragment>
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadImages.isPending}
+                className="bg-green-600 hover:bg-green-700 disabled:opacity-50 px-3 py-1 rounded text-sm"
+              >
+                {uploadImages.isPending ? "Uploading..." : "Upload Images"}
+              </button>
+              <button
+                onClick={handleImport}
+                disabled={importImages.isPending}
+                className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 px-3 py-1 rounded text-sm"
+              >
+                {importImages.isPending ? "Importing..." : "Import from Folder"}
+              </button>
+            </Fragment>
+          )}
+          {isAdmin && (
+            <button
+              onClick={() => navigate(`/projects/${pid}/training`)}
+              className="bg-purple-600 hover:bg-purple-700 px-3 py-1 rounded text-sm"
+            >
+              Training
+            </button>
+          )}
+          {isReviewerOrAdmin && (
+            <Fragment>
+              <button
+                onClick={() => navigate(`/projects/${pid}/review`)}
+                className="bg-yellow-600 hover:bg-yellow-700 px-3 py-1 rounded text-sm"
+              >
+                Review
+              </button>
+              <button
+                onClick={() => navigate(`/projects/${pid}/dashboard`)}
+                className="bg-teal-600 hover:bg-teal-700 px-3 py-1 rounded text-sm"
+              >
+                Dashboard
+              </button>
+            </Fragment>
+          )}
+          {isAdmin && (
+            <button
+              onClick={() => navigate("/admin")}
+              className="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-sm"
+            >
+              Admin
+            </button>
+          )}
+          <UserBadge />
         </div>
       </div>
 

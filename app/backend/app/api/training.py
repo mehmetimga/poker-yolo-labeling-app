@@ -6,10 +6,15 @@ from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..database import get_db
+from ..auth.dependencies import get_current_user, require_role
+from ..models.user import User
 from ..repositories import training_repo
 from ..services import training_service
 
 router = APIRouter()
+
+admin_only = require_role("admin")
+reviewer_or_admin = require_role("admin", "reviewer")
 
 
 # ─── Request / Response schemas ────────────────────────────────────
@@ -94,13 +99,13 @@ def _run_to_response(run) -> dict:
 
 
 @router.get("/projects/{project_id}/training-runs")
-async def list_runs(project_id: int, db: AsyncSession = Depends(get_db)):
+async def list_runs(project_id: int, _: User = Depends(reviewer_or_admin), db: AsyncSession = Depends(get_db)):
     runs = await training_repo.get_all(db, project_id)
     return [_run_to_response(r) for r in runs]
 
 
 @router.get("/training-runs/{run_id}")
-async def get_run(run_id: int, db: AsyncSession = Depends(get_db)):
+async def get_run(run_id: int, _: User = Depends(reviewer_or_admin), db: AsyncSession = Depends(get_db)):
     run = await training_repo.get_by_id(db, run_id)
     if not run:
         raise HTTPException(status_code=404, detail="Training run not found")
@@ -108,7 +113,7 @@ async def get_run(run_id: int, db: AsyncSession = Depends(get_db)):
 
 
 @router.get("/training-runs/{run_id}/status")
-async def get_run_live_status(run_id: int, db: AsyncSession = Depends(get_db)):
+async def get_run_live_status(run_id: int, _: User = Depends(reviewer_or_admin), db: AsyncSession = Depends(get_db)):
     """Get live training status (in-memory, more granular than DB status)."""
     live = training_service.get_training_status(run_id)
     run = await training_repo.get_by_id(db, run_id)
@@ -126,6 +131,7 @@ async def get_run_live_status(run_id: int, db: AsyncSession = Depends(get_db)):
 async def create_run(
     project_id: int,
     body: CreateRunRequest,
+    _: User = Depends(admin_only),
     db: AsyncSession = Depends(get_db),
 ):
     """Create a training run, split the dataset, and kick off training."""
@@ -171,7 +177,7 @@ async def create_run(
 
 
 @router.get("/training-runs/{run_id}/splits")
-async def get_splits(run_id: int, db: AsyncSession = Depends(get_db)):
+async def get_splits(run_id: int, _: User = Depends(reviewer_or_admin), db: AsyncSession = Depends(get_db)):
     """Get split summary and per-image split assignments."""
     run = await training_repo.get_by_id(db, run_id)
     if not run:
@@ -187,7 +193,7 @@ async def get_splits(run_id: int, db: AsyncSession = Depends(get_db)):
 
 
 @router.get("/training-runs/{run_id}/errors")
-async def get_error_mining(run_id: int, db: AsyncSession = Depends(get_db)):
+async def get_error_mining(run_id: int, _: User = Depends(reviewer_or_admin), db: AsyncSession = Depends(get_db)):
     """Get error mining results (images where model diverges from ground truth)."""
     run = await training_repo.get_by_id(db, run_id)
     if not run:
@@ -207,6 +213,7 @@ async def get_error_mining(run_id: int, db: AsyncSession = Depends(get_db)):
 async def compare_runs(
     run_id: int,
     other_run_id: int,
+    _: User = Depends(reviewer_or_admin),
     db: AsyncSession = Depends(get_db),
 ):
     """Compare metrics between two training runs."""
@@ -236,7 +243,7 @@ async def compare_runs(
 
 
 @router.post("/training-runs/{run_id}/activate")
-async def activate_model(run_id: int, db: AsyncSession = Depends(get_db)):
+async def activate_model(run_id: int, _: User = Depends(admin_only), db: AsyncSession = Depends(get_db)):
     """Set the trained model as the active inference model."""
     run = await training_repo.get_by_id(db, run_id)
     if not run:
