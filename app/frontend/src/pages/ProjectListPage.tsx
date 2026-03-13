@@ -30,21 +30,25 @@ export default function ProjectListPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-8">
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold">Poker YOLO Labeling</h1>
-        <div className="flex items-center gap-4">
-          <UserBadge />
+    <div className="min-h-screen flex flex-col">
+      {/* Top bar */}
+      <div className="bg-gray-800 border-b border-gray-700 px-6 py-3 flex items-center justify-between shrink-0">
+        <h1 className="text-lg font-bold">Poker YOLO Labeling</h1>
+        <div className="flex items-center gap-3">
           {user?.role === "admin" && (
             <button
               onClick={() => setShowForm(true)}
-              className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded font-medium"
+              className="bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded text-sm font-medium transition-colors"
             >
-              New Project
+              + New Project
             </button>
           )}
+          <div className="w-px h-6 bg-gray-700" />
+          <UserBadge />
         </div>
       </div>
+
+      <div className="max-w-4xl w-full mx-auto p-8 flex-1">
 
       {showForm && (
         <div className="bg-gray-800 rounded-lg p-6 mb-6">
@@ -113,6 +117,7 @@ export default function ProjectListPage() {
             No projects yet. Create one to get started.
           </p>
         )}
+      </div>
       </div>
     </div>
   );

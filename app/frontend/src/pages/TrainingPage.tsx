@@ -446,15 +446,23 @@ export default function TrainingPage() {
     <div className="h-screen flex flex-col">
       {/* Header */}
       <div className="bg-gray-800 border-b border-gray-700 px-4 py-2 flex items-center justify-between shrink-0">
-        <div className="flex items-center gap-4">
-          <button onClick={() => navigate(`/projects/${pid}`)} className="text-gray-400 hover:text-white text-sm">
-            &larr; Labeling
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate(`/projects/${pid}`)}
+            className="flex items-center gap-1 text-sm text-gray-400 hover:text-white bg-gray-700/50 hover:bg-gray-700 px-2.5 py-1 rounded transition-colors"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+            Labeling
           </button>
+          <div className="w-px h-5 bg-gray-700" />
           <h2 className="font-semibold">{project?.name || "Loading..."}</h2>
           <span className="text-sm text-gray-500">Training</span>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={() => navigate("/")} className="text-gray-400 hover:text-white text-sm">
+          <button
+            onClick={() => navigate("/")}
+            className="text-sm text-gray-400 hover:text-white hover:bg-gray-700 px-2.5 py-1.5 rounded transition-colors"
+          >
             Projects
           </button>
         </div>

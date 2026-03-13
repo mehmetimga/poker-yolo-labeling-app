@@ -10,19 +10,24 @@ export default function DashboardPage() {
   const { data: myProgress } = useMyProgress();
 
   return (
-    <div className="max-w-5xl mx-auto p-6">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-4">
+    <div className="min-h-screen flex flex-col">
+      {/* Top bar */}
+      <div className="bg-gray-800 border-b border-gray-700 px-6 py-3 flex items-center justify-between shrink-0">
+        <div className="flex items-center gap-3">
           <button
             onClick={() => navigate(`/projects/${projectId}`)}
-            className="text-gray-400 hover:text-gray-200"
+            className="flex items-center gap-1 text-sm text-gray-400 hover:text-white bg-gray-700/50 hover:bg-gray-700 px-2.5 py-1 rounded transition-colors"
           >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
             Back
           </button>
-          <h1 className="text-2xl font-bold">Dashboard</h1>
+          <div className="w-px h-5 bg-gray-700" />
+          <h1 className="text-lg font-bold">Dashboard</h1>
         </div>
         <UserBadge />
       </div>
+
+      <div className="max-w-5xl w-full mx-auto p-6 flex-1">
 
       {isLoading && <p className="text-gray-400 text-sm">Loading...</p>}
 
@@ -123,6 +128,7 @@ export default function DashboardPage() {
           </div>
         </>
       )}
+      </div>
     </div>
   );
 }

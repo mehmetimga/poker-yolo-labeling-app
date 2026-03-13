@@ -73,13 +73,15 @@ export default function ProjectPage() {
     <div className="h-screen flex flex-col">
       {/* Header */}
       <div className="bg-gray-800 border-b border-gray-700 px-4 py-2 flex items-center justify-between shrink-0">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           <button
             onClick={() => navigate("/")}
-            className="text-gray-400 hover:text-white text-sm"
+            className="flex items-center gap-1 text-sm text-gray-400 hover:text-white bg-gray-700/50 hover:bg-gray-700 px-2.5 py-1 rounded transition-colors"
           >
-            &larr; Projects
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+            Projects
           </button>
+          <div className="w-px h-5 bg-gray-700" />
           <h2 className="font-semibold">{project?.name || "Loading..."}</h2>
           <span className="text-sm text-gray-500">
             {project?.image_count || 0} images
@@ -104,23 +106,25 @@ export default function ProjectPage() {
               <button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploadImages.isPending}
-                className="bg-green-600 hover:bg-green-700 disabled:opacity-50 px-3 py-1 rounded text-sm"
+                className="bg-green-600 hover:bg-green-700 disabled:opacity-50 px-3 py-1.5 rounded text-sm transition-colors"
               >
-                {uploadImages.isPending ? "Uploading..." : "Upload Images"}
+                {uploadImages.isPending ? "Uploading..." : "Upload"}
               </button>
               <button
                 onClick={handleImport}
                 disabled={importImages.isPending}
-                className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 px-3 py-1 rounded text-sm"
+                className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 px-3 py-1.5 rounded text-sm transition-colors"
               >
-                {importImages.isPending ? "Importing..." : "Import from Folder"}
+                {importImages.isPending ? "Importing..." : "Import"}
               </button>
             </Fragment>
           )}
+          <div className="w-px h-5 bg-gray-700" />
+          {/* Nav buttons — ghost style */}
           {isAdmin && (
             <button
               onClick={() => navigate(`/projects/${pid}/training`)}
-              className="bg-purple-600 hover:bg-purple-700 px-3 py-1 rounded text-sm"
+              className="text-sm text-gray-400 hover:text-white hover:bg-gray-700 px-2.5 py-1.5 rounded transition-colors"
             >
               Training
             </button>
@@ -129,13 +133,13 @@ export default function ProjectPage() {
             <Fragment>
               <button
                 onClick={() => navigate(`/projects/${pid}/review`)}
-                className="bg-yellow-600 hover:bg-yellow-700 px-3 py-1 rounded text-sm"
+                className="text-sm text-gray-400 hover:text-white hover:bg-gray-700 px-2.5 py-1.5 rounded transition-colors"
               >
                 Review
               </button>
               <button
                 onClick={() => navigate(`/projects/${pid}/dashboard`)}
-                className="bg-teal-600 hover:bg-teal-700 px-3 py-1 rounded text-sm"
+                className="text-sm text-gray-400 hover:text-white hover:bg-gray-700 px-2.5 py-1.5 rounded transition-colors"
               >
                 Dashboard
               </button>
@@ -144,11 +148,12 @@ export default function ProjectPage() {
           {isAdmin && (
             <button
               onClick={() => navigate("/admin")}
-              className="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-sm"
+              className="text-sm text-gray-400 hover:text-white hover:bg-gray-700 px-2.5 py-1.5 rounded transition-colors"
             >
               Admin
             </button>
           )}
+          <div className="w-px h-5 bg-gray-700" />
           <UserBadge />
         </div>
       </div>

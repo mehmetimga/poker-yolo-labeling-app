@@ -19,23 +19,29 @@ export default function ReviewPage() {
   const [selectedId, setSelectedId] = useState<number | null>(null);
 
   return (
-    <div className="flex h-screen bg-gray-900 text-gray-100">
+    <div className="flex flex-col h-screen bg-gray-900 text-gray-100">
+      {/* Top bar */}
+      <div className="bg-gray-800 border-b border-gray-700 px-4 py-2 flex items-center justify-between shrink-0">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate(`/projects/${projectId}`)}
+            className="flex items-center gap-1 text-sm text-gray-400 hover:text-white bg-gray-700/50 hover:bg-gray-700 px-2.5 py-1 rounded transition-colors"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+            Back
+          </button>
+          <div className="w-px h-5 bg-gray-700" />
+          <h2 className="text-lg font-bold">Review</h2>
+          <span className="text-sm text-gray-500">{queue?.length ?? 0} in queue</span>
+        </div>
+        <UserBadge />
+      </div>
+
+      <div className="flex flex-1 overflow-hidden">
       {/* Sidebar — review queue */}
-      <div className="w-80 border-r border-gray-700 flex flex-col">
-        <div className="p-4 border-b border-gray-700">
-          <div className="flex items-center justify-between mb-2">
-            <button
-              onClick={() => navigate(`/projects/${projectId}`)}
-              className="text-gray-400 hover:text-gray-200 text-sm"
-            >
-              Back
-            </button>
-            <UserBadge />
-          </div>
-          <h2 className="text-lg font-bold">Review Queue</h2>
-          <p className="text-xs text-gray-400">
-            {queue?.length ?? 0} images awaiting review
-          </p>
+      <div className="w-72 border-r border-gray-700 flex flex-col">
+        <div className="px-3 py-2.5 border-b border-gray-700">
+          <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">Queue</p>
         </div>
         <div className="flex-1 overflow-y-auto">
           {isLoading && (
@@ -77,6 +83,7 @@ export default function ReviewPage() {
             Select an image from the queue to review
           </div>
         )}
+      </div>
       </div>
     </div>
   );
