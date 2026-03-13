@@ -46,13 +46,17 @@ export default function AnnotationCanvas({ imageId }: Props) {
   const { data: taxonomy } = useTaxonomy();
 
   const colorMap = useRef<Record<string, string>>({});
+  const descriptionMap = useRef<Record<string, string>>({});
   useEffect(() => {
     if (taxonomy) {
-      const map: Record<string, string> = {};
+      const cMap: Record<string, string> = {};
+      const dMap: Record<string, string> = {};
       for (const label of taxonomy.labels) {
-        map[label.name] = label.color;
+        cMap[label.name] = label.color;
+        if (label.description) dMap[label.name] = label.description;
       }
-      colorMap.current = map;
+      colorMap.current = cMap;
+      descriptionMap.current = dMap;
     }
   }, [taxonomy]);
 
@@ -500,7 +504,7 @@ export default function AnnotationCanvas({ imageId }: Props) {
         <Layer>
           {image && <KonvaImage image={image} />}
         </Layer>
-        <BoundingBoxLayer colorMap={colorMap.current} />
+        <BoundingBoxLayer colorMap={colorMap.current} descriptionMap={descriptionMap.current} />
         {/* Drawing preview */}
         {drawRect && (
           <Layer>

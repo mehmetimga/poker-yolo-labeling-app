@@ -1,26 +1,31 @@
-import { useRef, useEffect, useCallback } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import { Layer, Rect, Text, Group, Transformer } from "react-konva";
 import Konva from "konva";
 import { useAnnotationStore } from "@/stores/annotationStore";
 
 interface Props {
   colorMap: Record<string, string>;
+  descriptionMap?: Record<string, string>;
 }
 
 function BoundingBox({
   ann,
   color,
   isSelected,
+  isHovered,
   zoom,
   onSelect,
   onUpdate,
+  onHover,
 }: {
   ann: { tempId: string; label: string; x_min: number; y_min: number; x_max: number; y_max: number; source: string };
   color: string;
   isSelected: boolean;
+  isHovered: boolean;
   zoom: number;
   onSelect: () => void;
   onUpdate: (updates: { x_min: number; y_min: number; x_max: number; y_max: number }) => void;
+  onHover: (hovered: boolean) => void;
 }) {
   const rectRef = useRef<Konva.Rect>(null);
   const trRef = useRef<Konva.Transformer>(null);
@@ -73,7 +78,10 @@ function BoundingBox({
   const anchorPx = Math.min(8, Math.max(4, 6 / zoom));
 
   return (
-    <Group>
+    <Group
+      onMouseEnter={() => onHover(true)}
+      onMouseLeave={() => onHover(false)}
+    >
       <Rect
         ref={rectRef}
         x={ann.x_min}
@@ -81,8 +89,8 @@ function BoundingBox({
         width={w}
         height={h}
         stroke={color}
-        strokeWidth={(isSelected ? 3 : 2) / zoom}
-        fill={isSelected ? color + "20" : "transparent"}
+        strokeWidth={(isSelected ? 3 : isHovered ? 2.5 : 2) / zoom}
+        fill={isSelected ? color + "20" : isHovered ? color + "10" : "transparent"}
         draggable={isSelected}
         onClick={onSelect}
         onTap={onSelect}
@@ -142,7 +150,7 @@ function BoundingBox({
   );
 }
 
-export default function BoundingBoxLayer({ colorMap }: Props) {
+export default function BoundingBoxLayer({ colorMap, descriptionMap = {} }: Props) {
   const {
     annotations,
     selectedAnnotationId,
@@ -151,24 +159,68 @@ export default function BoundingBoxLayer({ colorMap }: Props) {
     zoom,
   } = useAnnotationStore();
 
-  return (
-    <Layer>
-      {annotations.map((ann) => {
-        const isSelected = ann.tempId === selectedAnnotationId;
-        const color = colorMap[ann.label] || "#ffffff";
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
 
-        return (
-          <BoundingBox
-            key={ann.tempId}
-            ann={ann}
-            color={color}
-            isSelected={isSelected}
-            zoom={zoom}
-            onSelect={() => setSelectedAnnotationId(ann.tempId)}
-            onUpdate={(updates) => updateAnnotation(ann.tempId, updates)}
+  // Tooltip only for hovered (not selected)
+  const hoveredAnn = hoveredId ? annotations.find((a) => a.tempId === hoveredId) : null;
+  const hoveredDesc = hoveredAnn ? descriptionMap[hoveredAnn.label] : undefined;
+
+  // Tooltip sizing
+  const descFontSize = 12 / zoom;
+  const descWidth = Math.max(280 / zoom, hoveredAnn ? (hoveredAnn.x_max - hoveredAnn.x_min) : 0);
+  const descPadding = 5 / zoom;
+  const charsPerLine = Math.floor(descWidth / (descFontSize * 0.6)) || 1;
+  const lineCount = hoveredDesc ? Math.ceil(hoveredDesc.length / charsPerLine) : 1;
+  const descHeight = descFontSize * lineCount * 1.3 + descPadding * 2;
+
+  return (
+    <>
+      <Layer>
+        {annotations.map((ann) => {
+          const isSelected = ann.tempId === selectedAnnotationId;
+          const isHovered = ann.tempId === hoveredId;
+          const color = colorMap[ann.label] || "#ffffff";
+
+          return (
+            <BoundingBox
+              key={ann.tempId}
+              ann={ann}
+              color={color}
+              isSelected={isSelected}
+              isHovered={isHovered}
+              zoom={zoom}
+              onSelect={() => setSelectedAnnotationId(ann.tempId)}
+              onUpdate={(updates) => updateAnnotation(ann.tempId, updates)}
+              onHover={(h) => setHoveredId(h ? ann.tempId : null)}
+            />
+          );
+        })}
+      </Layer>
+      {/* Tooltip layer — renders above all boxes, only on hover */}
+      {hoveredAnn && hoveredDesc && (
+        <Layer listening={false}>
+          <Rect
+            x={hoveredAnn.x_min - descPadding}
+            y={hoveredAnn.y_min - 16 / zoom - descHeight - descPadding}
+            width={descWidth + descPadding * 2}
+            height={descHeight}
+            fill="#78350f"
+            stroke="#ca8a04"
+            strokeWidth={1 / zoom}
+            cornerRadius={4 / zoom}
           />
-        );
-      })}
-    </Layer>
+          <Text
+            x={hoveredAnn.x_min}
+            y={hoveredAnn.y_min - 16 / zoom - descHeight}
+            text={hoveredDesc}
+            fontSize={descFontSize}
+            lineHeight={1.3}
+            fill="#fef9c3"
+            wrap="word"
+            width={descWidth}
+          />
+        </Layer>
+      )}
+    </>
   );
 }
