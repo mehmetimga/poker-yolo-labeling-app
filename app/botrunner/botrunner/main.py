@@ -4,6 +4,7 @@ import logging
 
 from fastapi import FastAPI
 
+from .api.actuator_router import router as actuator_router
 from .api.control_router import router as control_router
 from .api.game_state_router import router as game_state_router
 from .api.health_router import router as health_router
@@ -22,3 +23,4 @@ app = FastAPI(
 app.include_router(health_router, tags=["health"])
 app.include_router(control_router, tags=["pipeline"])
 app.include_router(game_state_router, tags=["game-state"])
+app.include_router(actuator_router, tags=["actuator"])

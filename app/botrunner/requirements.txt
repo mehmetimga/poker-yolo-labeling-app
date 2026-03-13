@@ -10,3 +10,5 @@ easyocr>=1.7.0
 ultralytics>=8.2.0
 pyyaml>=6.0
 numpy
+pyautogui>=0.9.54
+Appium-Python-Client>=4.0.0

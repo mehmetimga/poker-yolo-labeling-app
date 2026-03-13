@@ -8,13 +8,14 @@ from collections import deque
 from statistics import mean, quantiles
 
 from ..capture.frame_dedup import FrameDedup
-from ..capture.screen_capture import capture_screen
+from ..capture.screen_capture import capture_screen, get_window_bounds
 from ..config import settings
-from ..engine.game_state import assemble_game_state
+from ..engine.game_state import assemble_game_state, build_detection_map
 from ..models.pipeline_models import FrameResult
 from ..vision.detector import detect
 from ..vision.ocr_engine import init_ocr, run_ocr
 from ..vision.schema_classifier import classify_schema
+from .detection_map_buffer import detection_map_buffer
 from .state_buffer import state_buffer
 
 logger = logging.getLogger(__name__)
@@ -74,6 +75,9 @@ class PipelineManager:
         np_image, pil_image = result
         capture_ms = (time.perf_counter() - t0) * 1000
 
+        # Get window bounds for coordinate conversion (actuator needs this)
+        window_bounds = get_window_bounds(settings.window_title)
+
         # 2. Dedup
         if self._dedup.is_duplicate(pil_image):
             self._frames_skipped += 1
@@ -116,6 +120,12 @@ class PipelineManager:
 
         # 7. Assemble GameState
         game_state = assemble_game_state(frame_result)
+
+        # 7b. Build DetectionMap for actuator (retains button pixel coords)
+        if window_bounds:
+            retina_scale = w / window_bounds["width"] if window_bounds["width"] > 0 else 1.0
+            dmap = build_detection_map(frame_result, window_bounds, retina_scale)
+            detection_map_buffer.update(dmap)
 
         # 8. Gate: only emit if confidence is above threshold
         if game_state.schema_confidence >= settings.confidence_gate:

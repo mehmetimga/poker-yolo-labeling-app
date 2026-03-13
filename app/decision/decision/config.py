@@ -22,6 +22,9 @@ class DecisionSettings(BaseSettings):
     min_schema_confidence: float = 0.5
     min_card_confidence: float = 0.6
 
+    # Actuator
+    actuator_enabled: bool = False
+
     # Logging
     log_decisions_to_file: bool = True
     decision_log_path: str = "decisions.jsonl"

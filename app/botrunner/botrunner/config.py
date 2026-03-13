@@ -30,6 +30,25 @@ class BotSettings(BaseSettings):
     # API
     api_port: int = 8100
 
+    # Actuator
+    actuator_enabled: bool = False
+    actuator_dry_run: bool = True
+    actuator_method: str = "pyautogui"  # pyautogui | cliclick | adb | appium | applescript
+    actuator_min_delay_ms: int = 300
+    actuator_max_delay_ms: int = 1500
+    actuator_max_actions_per_minute: int = 20
+    actuator_require_reverify: bool = True
+
+    # ADB settings (method="adb")
+    adb_device: str = ""
+    adb_toolbar_offset_px: int = 0
+    adb_density_multiplier: float = 3.0
+
+    # Appium settings (method="appium")
+    appium_url: str = "http://127.0.0.1:4723"
+    appium_tap_pause_ms: int = 100
+    appium_platform: str = "android"  # android | ios
+
     model_config = {"env_prefix": "BOT_"}
 
 

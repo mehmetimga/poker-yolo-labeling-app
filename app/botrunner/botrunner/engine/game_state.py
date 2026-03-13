@@ -4,6 +4,7 @@ import logging
 import time
 import uuid
 
+from ..models.actuator_models import ButtonLocation, DetectionMap, SliderLocation
 from ..models.game_state_models import (
     AvailableAction,
     CardValue,
@@ -129,4 +130,65 @@ def assemble_game_state(frame_result: FrameResult) -> GameState:
         total_ms=frame_result.total_ms,
         raw_detections=len(detections),
         detection_confidence_avg=round(avg_conf, 3),
+    )
+
+
+def build_detection_map(
+    frame_result: FrameResult,
+    window_bounds: dict,
+    retina_scale: float,
+) -> DetectionMap:
+    """Extract button/slider pixel coordinates from detections into a DetectionMap.
+
+    This preserves the coordinate data that _build_actions() discards,
+    enabling the actuator to know where to click.
+    """
+    detections = frame_result.detections
+    ocr_results = frame_result.ocr_results
+    ocr_by_idx = {ocr.detection_index: ocr for ocr in ocr_results}
+
+    buttons: list[ButtonLocation] = []
+    slider: SliderLocation | None = None
+
+    for i, det in enumerate(detections):
+        # Buttons
+        if det.label in BUTTON_LABELS:
+            ocr = ocr_by_idx.get(i)
+            if ocr:
+                action_name, amount = parse_button_text(ocr.raw_text)
+            else:
+                action_name = det.label.replace("_button", "")
+                amount = None
+            buttons.append(ButtonLocation(
+                action=action_name,
+                label=det.label,
+                amount=amount,
+                center_x=det.center_x,
+                center_y=det.center_y,
+                x_min=det.x_min,
+                y_min=det.y_min,
+                x_max=det.x_max,
+                y_max=det.y_max,
+                confidence=det.confidence,
+            ))
+        # Slider
+        elif det.label == "slider":
+            slider = SliderLocation(
+                x_min=det.x_min,
+                y_min=det.y_min,
+                x_max=det.x_max,
+                y_max=det.y_max,
+                center_y=det.center_y,
+            )
+
+    return DetectionMap(
+        frame_id=frame_result.frame_id,
+        timestamp=frame_result.timestamp,
+        window_left=window_bounds["left"],
+        window_top=window_bounds["top"],
+        window_width=window_bounds["width"],
+        window_height=window_bounds["height"],
+        retina_scale=retina_scale,
+        buttons=buttons,
+        slider=slider,
     )

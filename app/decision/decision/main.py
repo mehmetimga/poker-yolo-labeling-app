@@ -8,6 +8,7 @@ from fastapi import FastAPI
 
 from .api.decision_router import router as decision_router
 from .api.health_router import router as health_router, set_consumer
+from .client.actuator_client import close_client, send_to_actuator
 from .client.state_tracker import StateTracker
 from .client.ws_consumer import BotrunnerConsumer
 from .log.decision_buffer import decision_buffer
@@ -45,6 +46,9 @@ async def _on_game_state(game_state):
         decision.hand_strength.category,
     )
 
+    # Send to actuator (non-blocking — fire and forget)
+    asyncio.create_task(send_to_actuator(decision.action, decision.amount))
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -54,6 +58,7 @@ async def lifespan(app: FastAPI):
     await consumer.start()
     yield
     await consumer.stop()
+    await close_client()
 
 
 app = FastAPI(
