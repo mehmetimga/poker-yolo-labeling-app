@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "./client";
 import type { ImageRecord } from "@/types";
+import { useAuthStore } from "@/stores/authStore";
 
 export function useImages(
   projectId: number | null,
@@ -34,7 +35,9 @@ export function useImage(imageId: number | null) {
 }
 
 export function getImageFileUrl(imageId: number): string {
-  return `/api/images/${imageId}/file`;
+  const token = useAuthStore.getState().token;
+  const url = `/api/images/${imageId}/file`;
+  return token ? `${url}?token=${encodeURIComponent(token)}` : url;
 }
 
 export function useUpdateImageStatus(imageId: number) {

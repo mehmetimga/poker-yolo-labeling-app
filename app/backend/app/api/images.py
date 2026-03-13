@@ -6,11 +6,13 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from jose import JWTError, jwt as jose_jwt
+
 from ..config import settings
 from ..database import get_db
-from ..auth.dependencies import get_current_user, require_role
+from ..auth.dependencies import get_current_user, require_role, oauth2_scheme_optional
 from ..models.user import User
-from ..repositories import image_repo
+from ..repositories import image_repo, user_repo
 from ..schemas.image import ImageOut, ImageStatusUpdate, BatchStatusUpdate, BatchSchemaAssign
 from ..schemas.annotation import AnnotationCreate
 from ..services import inference_service
@@ -58,19 +60,69 @@ async def get_image(image_id: int, _: User = Depends(get_current_user), db: Asyn
 
 
 @router.get("/images/{image_id}/file")
-async def get_image_file(image_id: int, _: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+async def get_image_file(
+    image_id: int,
+    token: str | None = Query(None),
+    bearer: str | None = Depends(oauth2_scheme_optional),
+    db: AsyncSession = Depends(get_db),
+):
+    # Accept auth via query param ?token= (for <img> tags) or Authorization header
+    auth_token = bearer or token
+    if not auth_token:
+        raise HTTPException(status_code=401, detail="Authentication required")
+    try:
+        payload = jose_jwt.decode(auth_token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm])
+        uid = payload.get("sub")
+        if uid is None:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        user = await user_repo.get_by_id(db, int(uid))
+        if user is None or not user.is_active:
+            raise HTTPException(status_code=401, detail="Invalid token")
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
     image = await image_repo.get_by_id(db, image_id)
     if not image:
         raise HTTPException(status_code=404, detail="Image not found")
-    filepath = Path(image.filepath)
-    if not filepath.is_file():
-        # Try resolving relative to images_dir as fallback
-        filepath = settings.images_dir / image.filepath
-    if not filepath.is_file():
+    filepath = resolve_image_path(image.filepath)
+    if filepath is None:
         raise HTTPException(status_code=404, detail="Image file not found on disk")
     suffix = filepath.suffix.lower()
     media_types = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp"}
     return FileResponse(filepath, media_type=media_types.get(suffix, "image/png"))
+
+
+def resolve_image_path(stored_path: str) -> Path | None:
+    """Resolve a stored filepath to an actual file on disk.
+
+    Handles Docker paths (/app/datasets/...) by stripping the container
+    prefix and resolving relative to images_dir.
+    """
+    # 1. Try as-is (absolute path on current machine)
+    fp = Path(stored_path)
+    if fp.is_file():
+        return fp
+
+    # 2. Try relative to images_dir
+    fp = settings.images_dir / stored_path
+    if fp.is_file():
+        return fp
+
+    # 3. Strip Docker container prefixes and retry
+    docker_prefixes = ["/app/datasets/", "/app/", "/data/"]
+    for prefix in docker_prefixes:
+        if stored_path.startswith(prefix):
+            relative = stored_path[len(prefix):]
+            fp = settings.images_dir / relative
+            if fp.is_file():
+                return fp
+
+    # 4. Last resort: find by filename anywhere in images_dir
+    filename = Path(stored_path).name
+    for candidate in settings.images_dir.rglob(filename):
+        if candidate.is_file():
+            return candidate
+
+    return None
 
 
 @router.patch("/images/{image_id}/status", response_model=ImageOut)
@@ -115,10 +167,8 @@ async def run_inference(image_id: int, _: User = Depends(get_current_user), db: 
     image = await image_repo.get_by_id(db, image_id)
     if not image:
         raise HTTPException(status_code=404, detail="Image not found")
-    filepath = Path(image.filepath)
-    if not filepath.is_file():
-        filepath = settings.images_dir / image.filepath
-    if not filepath.is_file():
+    filepath = resolve_image_path(image.filepath)
+    if filepath is None:
         raise HTTPException(status_code=404, detail="Image file not found on disk")
     try:
         detections = inference_service.run_inference(
