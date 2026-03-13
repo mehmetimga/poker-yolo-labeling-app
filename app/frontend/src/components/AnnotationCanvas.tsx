@@ -31,6 +31,7 @@ export default function AnnotationCanvas({ imageId }: Props) {
     activeTool,
     setActiveTool,
     activeLabel,
+    setActiveLabel,
     zoom,
     setZoom,
     panOffset,
@@ -336,11 +337,20 @@ export default function AnnotationCanvas({ imageId }: Props) {
         source: "manual",
         confidence: null,
       });
+
+      // Auto-advance to next label in taxonomy
+      if (taxonomy?.labels) {
+        const idx = taxonomy.labels.findIndex((l: { name: string }) => l.name === activeLabel);
+        if (idx >= 0 && taxonomy.labels.length > 1) {
+          const nextIdx = (idx + 1) % taxonomy.labels.length;
+          setActiveLabel(taxonomy.labels[nextIdx].name);
+        }
+      }
     }
     setIsDrawing(false);
     setDrawStart(null);
     setDrawRect(null);
-  }, [isPanning, isDrawing, drawRect, activeLabel, addAnnotation]);
+  }, [isPanning, isDrawing, drawRect, activeLabel, addAnnotation, taxonomy, setActiveLabel]);
 
   const cursorStyle =
     spaceDown || activeTool === "pan"

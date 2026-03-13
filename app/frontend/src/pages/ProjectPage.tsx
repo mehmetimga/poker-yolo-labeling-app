@@ -17,10 +17,11 @@ export default function ProjectPage() {
   const { data: project } = useProject(pid);
   const importImages = useImportImages(pid || 0);
   const uploadImages = useUploadImages(pid || 0);
-  const { selectedImageId, statusFilter, schemaFilter } = useProjectStore();
+  const { selectedImageId, statusFilter, schemaFilter, sortOrder } = useProjectStore();
   const { data: images } = useImages(pid, {
     status: statusFilter || undefined,
     schema: schemaFilter || undefined,
+    sort: sortOrder !== "filename" ? sortOrder : undefined,
   });
 
   const showMsg = (msg: string) => {

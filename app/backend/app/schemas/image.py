@@ -29,7 +29,7 @@ class ImageImportResult(BaseModel):
     errors: list[str]
 
 
-VALID_STATUSES = {"new", "in_progress", "labeled", "reviewed", "approved", "rejected"}
+VALID_STATUSES = {"new", "in_progress", "labeled", "reviewed", "approved", "rejected", "pre_annotated"}
 
 
 class ImageStatusUpdate(BaseModel):

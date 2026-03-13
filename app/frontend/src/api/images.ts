@@ -4,7 +4,7 @@ import type { ImageRecord } from "@/types";
 
 export function useImages(
   projectId: number | null,
-  filters?: { status?: string; schema?: string }
+  filters?: { status?: string; schema?: string; sort?: string }
 ) {
   return useQuery<ImageRecord[]>({
     queryKey: ["images", projectId, filters],
@@ -12,6 +12,7 @@ export function useImages(
       const params: Record<string, string> = {};
       if (filters?.status) params.status = filters.status;
       if (filters?.schema) params.schema = filters.schema;
+      if (filters?.sort) params.sort = filters.sort;
       const { data } = await api.get(`/projects/${projectId}/images`, {
         params,
       });
@@ -87,6 +88,34 @@ export function useRunInference(imageId: number) {
     mutationFn: async () => {
       const { data } = await api.post(`/images/${imageId}/infer`);
       return data;
+    },
+  });
+}
+
+export function useBatchInference(projectId: number) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (body?: { image_ids?: number[]; confidence?: number }) => {
+      const { data } = await api.post(`/projects/${projectId}/batch-infer`, body || {});
+      return data as { task_id: string | null; total_images: number };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["images"] });
+    },
+  });
+}
+
+export function useTaskStatus(taskId: string | null) {
+  return useQuery<{ task_id: string; status: string; total: number; completed: number; errors: number }>({
+    queryKey: ["task", taskId],
+    queryFn: async () => {
+      const { data } = await api.get(`/tasks/${taskId}`);
+      return data;
+    },
+    enabled: !!taskId,
+    refetchInterval: (query) => {
+      if (query.state.data?.status === "done") return false;
+      return 2000;
     },
   });
 }

@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .config import settings
 from .database import init_db
-from .api import projects, images, annotations, schemas, export
+from .api import projects, images, annotations, schemas, export, tasks
 
 
 @asynccontextmanager
@@ -30,6 +30,7 @@ app.include_router(images.router, tags=["images"])
 app.include_router(annotations.router, tags=["annotations"])
 app.include_router(schemas.router, prefix="/schemas", tags=["schemas"])
 app.include_router(export.router, tags=["export"])
+app.include_router(tasks.router, tags=["tasks"])
 
 
 @app.get("/health")

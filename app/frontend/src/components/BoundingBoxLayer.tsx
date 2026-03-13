@@ -18,7 +18,7 @@ function BoundingBox({
   onUpdate,
   onHover,
 }: {
-  ann: { tempId: string; label: string; x_min: number; y_min: number; x_max: number; y_max: number; source: string };
+  ann: { tempId: string; label: string; x_min: number; y_min: number; x_max: number; y_max: number; source: string; confidence?: number | null };
   color: string;
   isSelected: boolean;
   isHovered: boolean;
@@ -76,6 +76,7 @@ function BoundingBox({
 
   // Anchor size: 6px on screen regardless of zoom
   const anchorPx = Math.min(8, Math.max(4, 6 / zoom));
+  const isModelPrediction = ann.source === "model";
 
   return (
     <Group
@@ -90,7 +91,8 @@ function BoundingBox({
         height={h}
         stroke={color}
         strokeWidth={(isSelected ? 3 : isHovered ? 2.5 : 2) / zoom}
-        fill={isSelected ? color + "20" : isHovered ? color + "10" : "transparent"}
+        dash={isModelPrediction ? [8 / zoom, 4 / zoom] : undefined}
+        fill={isSelected ? color + "20" : isHovered ? color + "10" : isModelPrediction ? color + "08" : "transparent"}
         draggable={isSelected}
         onClick={onSelect}
         onTap={onSelect}
@@ -106,6 +108,17 @@ function BoundingBox({
         fill={color}
         listening={false}
       />
+      {/* Confidence badge for model predictions */}
+      {ann.confidence != null && (
+        <Text
+          x={ann.x_min + (ann.label.length * 7 + 4) / zoom}
+          y={ann.y_min - 16 / zoom}
+          text={`${Math.round(ann.confidence * 100)}%`}
+          fontSize={10 / zoom}
+          fill={ann.confidence >= 0.8 ? "#4ade80" : ann.confidence >= 0.5 ? "#facc15" : "#f87171"}
+          listening={false}
+        />
+      )}
       {/* Source indicator */}
       {ann.source !== "manual" && (
         <Text

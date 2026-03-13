@@ -10,6 +10,7 @@ async def get_by_project(
     project_id: int,
     status: str | None = None,
     schema: str | None = None,
+    sort: str = "filename",
     limit: int = 500,
     offset: int = 0,
 ) -> list[tuple[ImageRecord, int]]:
@@ -22,9 +23,20 @@ async def get_by_project(
         stmt = stmt.where(ImageRecord.status == status)
     if schema:
         stmt = stmt.where(ImageRecord.assigned_schema == schema)
+
+    # Sort options
+    if sort == "confidence_asc":
+        order = ImageRecord.schema_confidence.asc().nullslast()
+    elif sort == "confidence_desc":
+        order = ImageRecord.schema_confidence.desc().nullsfirst()
+    elif sort == "created_at":
+        order = ImageRecord.created_at.desc()
+    else:
+        order = ImageRecord.filename
+
     stmt = (
         stmt.group_by(ImageRecord.id)
-        .order_by(ImageRecord.filename)
+        .order_by(order)
         .limit(limit)
         .offset(offset)
     )

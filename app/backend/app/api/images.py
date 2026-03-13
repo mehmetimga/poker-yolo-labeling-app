@@ -1,7 +1,9 @@
+import asyncio
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import FileResponse
+from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..config import settings
@@ -10,8 +12,14 @@ from ..repositories import image_repo
 from ..schemas.image import ImageOut, ImageStatusUpdate, BatchStatusUpdate, BatchSchemaAssign
 from ..schemas.annotation import AnnotationCreate
 from ..services import inference_service
+from ..services.batch_inference_service import create_task, run_batch_inference
 
 router = APIRouter()
+
+
+class BatchInferRequest(BaseModel):
+    image_ids: list[int] | None = None
+    confidence: float | None = None
 
 
 @router.get("/projects/{project_id}/images", response_model=list[ImageOut])
@@ -19,12 +27,13 @@ async def list_images(
     project_id: int,
     status: str | None = Query(None),
     schema: str | None = Query(None),
+    sort: str = Query("filename"),
     limit: int = Query(500, le=2000),
     offset: int = Query(0, ge=0),
     db: AsyncSession = Depends(get_db),
 ):
     rows = await image_repo.get_by_project(
-        db, project_id, status=status, schema=schema, limit=limit, offset=offset
+        db, project_id, status=status, schema=schema, sort=sort, limit=limit, offset=offset
     )
     result = []
     for image, annotation_count in rows:
@@ -112,3 +121,31 @@ async def run_inference(image_id: int, db: AsyncSession = Depends(get_db)):
     except FileNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
     return detections
+
+
+@router.post("/projects/{project_id}/batch-infer")
+async def batch_infer(
+    project_id: int,
+    body: BatchInferRequest | None = None,
+    db: AsyncSession = Depends(get_db),
+):
+    if not settings.yolo_model_path:
+        raise HTTPException(status_code=404, detail="No YOLO model configured. Set LABELING_YOLO_MODEL_PATH.")
+
+    confidence = (body.confidence if body and body.confidence else None) or settings.yolo_confidence_threshold
+
+    if body and body.image_ids:
+        image_ids = body.image_ids
+    else:
+        # Select all "new" images in the project
+        rows = await image_repo.get_by_project(db, project_id, status="new", limit=2000)
+        image_ids = [image.id for image, _ in rows]
+
+    if not image_ids:
+        return {"task_id": None, "total_images": 0, "message": "No images to process"}
+
+    task_id = create_task(project_id, len(image_ids))
+    asyncio.create_task(
+        run_batch_inference(task_id, image_ids, settings.yolo_model_path, confidence)
+    )
+    return {"task_id": task_id, "total_images": len(image_ids)}

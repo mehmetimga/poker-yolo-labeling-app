@@ -29,6 +29,7 @@ export default function LabelSidebar({ imageId, projectId }: Props) {
     addAnnotation,
     setAnnotations,
     removeAnnotation,
+    acceptAllModelAnnotations,
     selectedAnnotationId,
     undo,
     redo,
@@ -283,6 +284,27 @@ export default function LabelSidebar({ imageId, projectId }: Props) {
         return;
       }
 
+      // Tab: cycle through annotations
+      if (e.key === "Tab") {
+        e.preventDefault();
+        if (annotations.length === 0) return;
+        const ids = annotations.map((a) => a.tempId);
+        const curIdx = selectedAnnotationId ? ids.indexOf(selectedAnnotationId) : -1;
+        const nextIdx = e.shiftKey
+          ? (curIdx <= 0 ? ids.length - 1 : curIdx - 1)
+          : (curIdx + 1) % ids.length;
+        useAnnotationStore.getState().setSelectedAnnotationId(ids[nextIdx]);
+        return;
+      }
+
+      // Enter: accept all model predictions, save, go to next
+      if (e.key === "Enter") {
+        e.preventDefault();
+        acceptAllModelAnnotations();
+        handleSave().then(() => navigateImage("next"));
+        return;
+      }
+
       switch (e.key.toLowerCase()) {
         case "n":
           if (e.shiftKey) {
@@ -360,6 +382,8 @@ export default function LabelSidebar({ imageId, projectId }: Props) {
     handleSave,
     taxonomy,
     setActiveLabel,
+    annotations,
+    acceptAllModelAnnotations,
   ]);
 
   return (
@@ -448,6 +472,15 @@ export default function LabelSidebar({ imageId, projectId }: Props) {
               >
                 {runInference.isPending ? "..." : "Run Model"}
               </button>
+              {annotations.some((a) => a.source === "model") && (
+                <button
+                  onClick={acceptAllModelAnnotations}
+                  className="text-xs bg-green-700 hover:bg-green-600 px-2 py-0.5 rounded"
+                  title="Accept all model predictions"
+                >
+                  Accept All ✓
+                </button>
+              )}
             </div>
           </div>
           {copyStatus && (

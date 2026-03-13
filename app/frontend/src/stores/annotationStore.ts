@@ -30,6 +30,7 @@ interface AnnotationStore {
   setHasUnsavedChanges: (val: boolean) => void;
   setZoom: (zoom: number) => void;
   setPanOffset: (offset: { x: number; y: number }) => void;
+  acceptAllModelAnnotations: () => void;
   undo: () => void;
   redo: () => void;
   reset: () => void;
@@ -102,6 +103,20 @@ export const useAnnotationStore = create<AnnotationStore>((set) => ({
         undoStack: [...state.undoStack, state.annotations],
         annotations: next,
         selectedAnnotationId: null,
+        hasUnsavedChanges: true,
+      };
+    }),
+
+  acceptAllModelAnnotations: () =>
+    set((state) => {
+      const hasModel = state.annotations.some((a) => a.source === "model");
+      if (!hasModel) return state;
+      return {
+        undoStack: [...state.undoStack.slice(-(MAX_UNDO - 1)), state.annotations],
+        redoStack: [],
+        annotations: state.annotations.map((a) =>
+          a.source === "model" ? { ...a, source: "manual" as const } : a
+        ),
         hasUnsavedChanges: true,
       };
     }),

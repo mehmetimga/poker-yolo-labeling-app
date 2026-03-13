@@ -16,7 +16,8 @@ export type ImageStatus =
   | "labeled"
   | "reviewed"
   | "approved"
-  | "rejected";
+  | "rejected"
+  | "pre_annotated";
 
 export interface ImageRecord {
   id: number;
